@@ -1,7 +1,12 @@
 {
-  "uuid": "ccf5ce08-c932-4e11-a5fd-c52378a86c20",
-  "name": "maDMP (RDA Common Standard)",
+  "id": "dsw:rda-madmp:1.0.0",
+  "organizationId": "dsw",
+  "templateId": "rda-madmp",
+  "version": "1.0.0",
+  "name": "maDMP (RDA DMP Common Standard)",
   "description": "Machine-actionable DMP according to RDA Common Standard",
+  "readme": "# Machine-Actionable DMP Template\n\nTemplate based on the [RDA DMP Common Standard (DCS)](https://github.com/RDA-DMP-Common/RDA-DMP-Common-Standard) for machine-actionable Data Management Plans and the provided [JSON schema](https://github.com/RDA-DMP-Common/RDA-DMP-Common-Standard/tree/master/examples/JSON/JSON-schema) for machine-actionable DMPs. It also uses the [DCS Ontology](https://github.com/RDA-DMP-Common/RDA-DMP-Common-Standard/tree/master/ontologies) to allow export in RDF.\n\n## Changelog\n\n### 1.0.0\n\n- Initial version based on results of [RDA hackathon on maDMPs 2020](https://rda-dmp-common.github.io/hackathon-2020/)\n- Compatible with *DCS JSON Schema 1.0* and *DCSO 3.0.2*\n",
+  "recommendedPackageId": "dsw:root:2.2.0",
   "allowedPackages": [
     {
       "orgId": "dsw",
@@ -13,9 +18,9 @@
   "formats": [
     {
       "uuid": "0369cf46-a50e-4be5-9656-7b17227c7818",
-      "name": "maDMP JSON",
+      "name": "JSON",
       "shortName": "json",
-      "icon": "fas fa-passport",
+      "icon": "fas fa-globe",
       "color": "#f15a24",
       "steps": [
         {
@@ -29,27 +34,10 @@
       ]
     },
     {
-      "uuid": "cd62f85c-c51a-4846-ac09-e3b7046ec5ab",
-      "name": "maDMP for DMPTool",
-      "shortName": "json",
-      "icon": "fas fa-passport",
-      "color": "#f15a24",
-      "steps": [
-        {
-          "name": "jinja",
-          "options": {
-            "template": "content/dmptool.json.j2",
-            "content-type": "application/json",
-            "extension": "json"
-          }
-        }
-      ]
-    },
-    {
       "uuid": "9c7d572e-c273-4323-97a4-ab38f943c33a",
-      "name": "maDMP TTL (DCSO)",
+      "name": "Turtle",
       "shortName": "ttl",
-      "icon": "fas fa-file-code",
+      "icon": "fas fa-share-alt",
       "color": "#f15a24",
       "steps": [
         {
@@ -65,9 +53,9 @@
     
     {
       "uuid": "af4441a5-17af-4a48-91cb-635a4e43afad",
-      "name": "maDMP N3 (DCSO)",
+      "name": "N3",
       "shortName": "n3",
-      "icon": "fas fa-file-alt",
+      "icon": "fas fa-share-alt",
       "color": "#f15a24",
       "steps": [
         {
@@ -89,9 +77,9 @@
     },
     {
       "uuid": "3799b5ef-3a85-4753-b500-250370bf642f",
-      "name": "maDMP RDF/XML (DCSO)",
+      "name": "RDF/XML",
       "shortName": "rdf",
-      "icon": "fas fa-file-alt",
+      "icon": "fas fa-share-alt",
       "color": "#f15a24",
       "steps": [
         {
@@ -113,9 +101,9 @@
     },
     {
       "uuid": "889566fd-c930-419b-9514-169211f357c5",
-      "name": "maDMP JSON-LD (DCSO)",
+      "name": "JSON-LD",
       "shortName": "json-ld",
-      "icon": "fas fa-file-alt",
+      "icon": "fas fa-share-alt",
       "color": "#f15a24",
       "steps": [
         {
@@ -137,9 +125,9 @@
     },
     {
       "uuid": "bd8ec4b2-fbea-401f-a898-681fbb03f2be",
-      "name": "maDMP N-Triples (DCSO)",
+      "name": "N-Triples",
       "shortName": "nt",
-      "icon": "fas fa-file-alt",
+      "icon": "fas fa-share-alt",
       "color": "#f15a24",
       "steps": [
         {
@@ -161,9 +149,9 @@
     },
     {
       "uuid": "5978ca10-433b-4c53-a810-f98841f497d0",
-      "name": "maDMP Trig (DCSO)",
+      "name": "Trig",
       "shortName": "trig",
-      "icon": "fas fa-file-alt",
+      "icon": "fas fa-share-alt",
       "color": "#f15a24",
       "steps": [
         {

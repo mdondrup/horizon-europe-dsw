@@ -2,11 +2,11 @@
   "uuid": "ccf5ce08-c932-4e11-a5fd-c52378a86c20",
   "name": "maDMP (RDA Common Standard)",
   "description": "Machine-actionable DMP according to RDA Common Standard",
-  "allowedKMs": [
+  "allowedPackages": [
     {
       "orgId": "dsw",
       "kmId": "root",
-      "minVersion": "2.0.0",
+      "minVersion": "2.2.0",
       "maxVersion": null
     }
   ],
@@ -29,18 +29,156 @@
       ]
     },
     {
-      "uuid": "9c7d572e-c273-4323-97a4-ab38f943c33a",
-      "name": "maDMP RDF (DSCO)",
-      "shortName": "rdf",
-      "icon": "fas fa-share-alt",
+      "uuid": "cd62f85c-c51a-4846-ac09-e3b7046ec5ab",
+      "name": "maDMP for DMPTool",
+      "shortName": "json",
+      "icon": "fas fa-passport",
       "color": "#f15a24",
       "steps": [
         {
           "name": "jinja",
           "options": {
-            "template": "content/madmp.rdf.j2",
-            "content-type": "application/rdf+xml",
-            "extension": "rdf"
+            "template": "content/dmptool.json.j2",
+            "content-type": "application/json",
+            "extension": "json"
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "9c7d572e-c273-4323-97a4-ab38f943c33a",
+      "name": "maDMP TTL (DCSO)",
+      "shortName": "ttl",
+      "icon": "fas fa-file-code",
+      "color": "#f15a24",
+      "steps": [
+        {
+          "name": "jinja",
+          "options": {
+            "template": "content/madmp.ttl.j2",
+            "content-type": "text/ttl",
+            "extension": "ttl"
+          }
+        }
+      ]
+    },
+    
+    {
+      "uuid": "af4441a5-17af-4a48-91cb-635a4e43afad",
+      "name": "maDMP N3 (DCSO)",
+      "shortName": "n3",
+      "icon": "fas fa-file-alt",
+      "color": "#f15a24",
+      "steps": [
+        {
+          "name": "jinja",
+          "options": {
+            "template": "content/madmp.ttl.j2",
+            "content-type": "text/ttl",
+            "extension": "ttl"
+          }
+        },
+        {
+          "name": "rdflib-convert",
+          "options": {
+            "from": "ttl",
+            "to": "n3"
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "3799b5ef-3a85-4753-b500-250370bf642f",
+      "name": "maDMP RDF/XML (DCSO)",
+      "shortName": "rdf",
+      "icon": "fas fa-file-alt",
+      "color": "#f15a24",
+      "steps": [
+        {
+          "name": "jinja",
+          "options": {
+            "template": "content/madmp.ttl.j2",
+            "content-type": "text/ttl",
+            "extension": "ttl"
+          }
+        },
+        {
+          "name": "rdflib-convert",
+          "options": {
+            "from": "ttl",
+            "to": "rdf/xml"
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "889566fd-c930-419b-9514-169211f357c5",
+      "name": "maDMP JSON-LD (DCSO)",
+      "shortName": "json-ld",
+      "icon": "fas fa-file-alt",
+      "color": "#f15a24",
+      "steps": [
+        {
+          "name": "jinja",
+          "options": {
+            "template": "content/madmp.ttl.j2",
+            "content-type": "text/ttl",
+            "extension": "ttl"
+          }
+        },
+        {
+          "name": "rdflib-convert",
+          "options": {
+            "from": "ttl",
+            "to": "json-ld"
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "bd8ec4b2-fbea-401f-a898-681fbb03f2be",
+      "name": "maDMP N-Triples (DCSO)",
+      "shortName": "nt",
+      "icon": "fas fa-file-alt",
+      "color": "#f15a24",
+      "steps": [
+        {
+          "name": "jinja",
+          "options": {
+            "template": "content/madmp.ttl.j2",
+            "content-type": "text/ttl",
+            "extension": "ttl"
+          }
+        },
+        {
+          "name": "rdflib-convert",
+          "options": {
+            "from": "ttl",
+            "to": "ntriples"
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "5978ca10-433b-4c53-a810-f98841f497d0",
+      "name": "maDMP Trig (DCSO)",
+      "shortName": "trig",
+      "icon": "fas fa-file-alt",
+      "color": "#f15a24",
+      "steps": [
+        {
+          "name": "jinja",
+          "options": {
+            "template": "content/madmp.ttl.j2",
+            "content-type": "text/ttl",
+            "extension": "ttl"
+          }
+        },
+        {
+          "name": "rdflib-convert",
+          "options": {
+            "from": "ttl",
+            "to": "trig"
           }
         }
       ]

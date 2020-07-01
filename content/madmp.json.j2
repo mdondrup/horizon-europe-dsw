@@ -1,34 +1,3 @@
 {#- maDMP template based on https://github.com/RDA-DMP-Common/RDA-DMP-Common-Standard/blob/master/examples/JSON/JSON-schema/1.0/maDMP-schema-1.0.json -#}
 {%- import "_mapping.j2" as mapping with context -%}
-{
-	"dmp": {
-		"title": "{{ mapping.madmpProject.title }}",
-		"language": "{{ mapping.madmpLanguage }}",
-		"contact": {
-			"contact_id": {
-				"identifier": "http://orcid.org/0000-0000-0000-0000",
-				"type": "orcid"
-			},
-			"mbox": "cc@example.com",
-			"name": "Charlie Chaplin"
-		},
-		"dmp_id": {
-			"identifier": "https://doi.org/10.0000/00.0.1234",
-			"type": "doi"
-		},
-		"dataset": [
-			{
-				"dataset_id": {
-					"identifier": "https://doi.org/10.0000/00.0.5678",
-					"type": "doi"
-				},
-				"title": "Placeholder dataset",
-				"personal_data": "unknown",
-				"sensitive_data": "unknown"
-			}
-		],
-		"ethical_issues_exist": "unknown",
-		"created": "2018-07-23T10:10:23.6",
-		"modified": "2019-02-06T15:30:42.1"
-	}
-}
+{{ mapping.madmp|tojson(4) }}

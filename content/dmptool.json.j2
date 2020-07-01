@@ -1,0 +1,8 @@
+{%- import "_mapping.j2" as mapping with context -%}
+{%- set dmptoolDMP = {
+  "total_items": 1,
+  "items": [
+    mapping.madmp
+  ]
+} -%}
+{{ dmptoolDMP|tojson }}

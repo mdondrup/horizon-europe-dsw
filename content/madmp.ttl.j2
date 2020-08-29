@@ -7,8 +7,26 @@
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
 @prefix dcs-lang: <https://w3id.org/dcso/id/iso639-3/> .
 
+{# URI mappings #}
+{%- set uri_dmp = dmp["dmp_id"]["identifier"] -%}
+{%- set uri_dmpid = uri_dmp ~ "/identifier" -%}
 
-<{{ dmp["dmp_id"]["identifier"] }}>
+{%- macro make_uri(identifier, type) -%}
+  {%- if identifier.startswith("http") -%}
+    <{{ identifier }}>
+  {%- elif type == "orcid" -%}
+    https://orcid.org/{{ identifier }}
+  {%- elif type == "doi" -%}
+    https://doi.org/{{ identifier }}
+  {%- elif type == "handle" -%}
+    https://hdl.handle.net/{{ identifier }}
+  {%- else -%}
+    {{ uri_dmp }}#{{ identifier }}
+  {%- endif -%}
+{%- endmacro -%}
+
+# DMP
+<{{ uri_dmp }}>
   a dcso:DMP ;
   dct:title {{ dmp["title"]|tojson }} ;
   dct:description {{ dmp["description"]|tojson }} ;
@@ -17,22 +35,9 @@
 {%- if "ethical_issues_description" in dmp.keys() %}
   dcso:ethicalIssuesDescription {{ dmp["ethical_issues_description"]|tojson }} ;
 {%- endif %}
-  dcso:hasDMPId
-    [ a dcso:DMPId ;
-      dcso:identifier_type {{ dmp["dmp_id"]["type"]|tojson }} ;
-      dct:identifier {{ dmp["dmp_id"]["identifier"]|tojson }} ;
-    ] ;
+  dcso:hasDMPId <{{ uri_dmpid }}> ;
 {%- if "contact" in dmp.keys() %}
-  dcso:hasContact
-    [ a dcso:Contact ;
-      dcso:hasContactId
-        [ a dcso:ContactId ;
-          dcso:identifier_type {{ dmp["contact"]["contact_id"]["type"]|tojson }} ;
-          dct:identifier {{ dmp["contact"]["contact_id"]["identifier"]|tojson }} ;
-        ] ;
-      foaf:mbox {{ dmp["contact"]["mbox"]|tojson }} ;
-      foaf:name {{ dmp["contact"]["name"]|tojson }} ;
-    ] ;
+  dcso:hasContact <{{ make_uri(dmp["contact"]["contact_id"]["identifier"], dmp["contact"]["contact_id"]["type"]) }}> ;
 {%- endif %}
 {%- if "contributor" in dmp.keys() and dmp["contributor"]|length > 0 %}
   dcso:hasContributor
@@ -124,6 +129,26 @@
 {%- endif %}
   dct:created "{{ dmp["created"] }}"^^xsd:dateTime ;
   dct:modified "{{ dmp["modified"] }}"^^xsd:dateTime .
+
+# DMP identifier
+<{{ uri_dmpid }}> a dcso:DMPId ;
+  dcso:identifier_type {{ dmp["dmp_id"]["type"]|tojson }} ;
+  dct:identifier {{ dmp["dmp_id"]["identifier"]|tojson }} .
+
+# DMP contact
+{%- if "contact" in dmp.keys() %}
+{%- set uri_contact = make_uri(dmp["contact"]["contact_id"]["identifier"], dmp["contact"]["contact_id"]["type"]) %}
+{%- set uri_contact_id = uri_contact ~ "/identifier" %}
+<{{ uri_contact }}> a dcso:Contact ;
+  dcso:hasContactId <{{ uri_contact_id }}> ;
+  foaf:mbox {{ dmp["contact"]["mbox"]|tojson }} ;
+  foaf:name {{ dmp["contact"]["name"]|tojson }} .
+
+<{{ uri_contact_id }}> a dcso:ContactId ;
+  dcso:identifier_type {{ dmp["contact"]["contact_id"]["type"]|tojson }} ;
+  dct:identifier {{ dmp["contact"]["contact_id"]["identifier"]|tojson }} .
+{%- endif %}
+
 
 # This file has been exported from Data Stewardship Wizard (ds-wizard.org)
 # It is using DCSO 3.0.2 (see https://github.com/RDA-DMP-Common/RDA-DMP-Common-Standard)

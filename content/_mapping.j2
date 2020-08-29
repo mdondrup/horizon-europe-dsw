@@ -1,7 +1,7 @@
 {#- This file contains the mapping with dsw:root KM -#}
 {%- import "content/_uuids.j2" as uuids with context -%}
 {%- set km = ctx.knowledgeModel -%}
-{%- set repliesMap = ctx.questionnaireRepliesMap -%}
+{%- set repliesMap = ctx.questionnaireReplies -%}
 {#- Basic DMP metadata -#}
 {#- maDMP variables -#}
 {%- set madmpDescription = "This maDMP has been created using Data Stewardship Wizard (DSW, ds-wizard.org) and is based on knowledge model " ~ ctx.package.name ~ " (" ~ [ctx.package.organizationId, ctx.package.kmId, ctx.package.version]|join(":") ~ "). The questionnaire used for this DMP is identified by UUID \"" ~ ctx.questionnaireUuid ~ "\" within " ~ ctx.config.clientUrl ~ " DSW instance." -%}
@@ -12,10 +12,10 @@
 -%}
 {#- Contributors (list) and contact -#}
 {%- set contributorsPath = [uuids.adminDetailsCUuid, uuids.contributorsQUuid]|reply_path -%}
-{%- set contributorsReply = repliesMap[contributorsPath]|reply_int_value -%}
+{%- set contributorsItems = repliesMap[contributorsPath]|reply_items -%}
 {%- set contributors = [] -%}
 {%- set contacts = [] -%}
-{%- for i in range(contributorsReply) -%}
+{%- for i in contributorsItems -%}
   {%- set contributorName = repliesMap[[contributorsPath, i, uuids.contributorNameQUuid]|reply_path]|reply_str_value -%}
   {%- set contributorEmail = repliesMap[[contributorsPath, i, uuids.contributorEmailQUuid]|reply_path]|reply_str_value -%}
   {%- set contributorOrcid = repliesMap[[contributorsPath, i, uuids.contributorOrcidQUuid]|reply_path]|reply_str_value -%}
@@ -77,24 +77,24 @@
 -%}
 {#- Projects -#}
 {%- set projectsPath = [uuids.adminDetailsCUuid, uuids.projectsQUuid]|reply_path -%}
-{%- set projectsReply = repliesMap[projectsPath]|reply_int_value -%}
+{%- set projectsItems = repliesMap[projectsPath]|reply_items -%}
 {%- set projects = [] -%}
-{%- for i in range(contributorsReply) -%}
+{%- for i in projectsItems -%}
   {%- set projectName = repliesMap[[projectsPath, i, uuids.projectNameQUuid]|reply_path]|reply_str_value -%}
   {%- set projectAbstract = repliesMap[[projectsPath, i, uuids.projectAbstractQUuid]|reply_path]|reply_str_value -%}
   {%- set projectStart = repliesMap[[projectsPath, i, uuids.projectStartQUuid]|reply_path]|reply_str_value -%}
   {%- set projectEnd = repliesMap[[projectsPath, i, uuids.projectEndQUuid]|reply_path]|reply_str_value -%}
 
   {%- set projectFundingPath = [projectsPath, i, uuids.projectFundingQUuid]|reply_path -%}
-  {%- set projectFundingReply = repliesMap[projectFundingPath]|reply_int_value -%}
+  {%- set projectFundingItems = repliesMap[projectFundingPath]|reply_items -%}
   {%- set funding = [] -%}
-  {%- for j in range(projectFundingReply) -%}
+  {%- for j in projectFundingItems -%}
     {%- set funderReply = repliesMap[[projectFundingPath, j, uuids.projectFundingFunderQUuid]|reply_path] -%}
     {%- set funderUrl = "" -%}
-    {%- if funderReply and funderReply.value.value.type == "IntegrationValue" -%}
-      {%- set funderUrl = funderReply.value.value.id -%}
+    {%- if funderReply and funderReply.value.type == "IntegrationValue" -%}
+      {%- set funderUrl = funderReply.value.id -%}
     {%- elif funderReply -%}
-      {%- set funderUrl = funderReply.value.value.value -%}
+      {%- set funderUrl = funderReply.value.value -%}
     {%- endif -%}
     {%- set grantNumber = repliesMap[[projectFundingPath, j, uuids.projectFundingGrantNumberQUuid]|reply_path]|reply_str_value -%}
     {%- set fundingStatusAUuid = repliesMap[[projectFundingPath, j, uuids.projectFundingStatusQUuid]|reply_path]|reply_str_value -%}
@@ -159,9 +159,9 @@
   {%- set usingPreexistingAUuid = repliesMap[usingPreexistingPath]|reply_str_value -%}
   {%- if usingPreexistingAUuid == uuids.usingPreexistingYesAUuid -%}
     {%- set nrefDataPath = [usingPreexistingPath, uuids.usingPreexistingYesAUuid, uuids.nrefDataQUuid]|reply_path -%}
-    {%- set nrefDataReply = repliesMap[nrefDataPath]|reply_int_value -%}
+    {%- set nrefDataItems = repliesMap[nrefDataPath]|reply_items -%}
 
-    {%- for i in range(nrefDataReply) -%}
+    {%- for i in nrefDataItems -%}
       {%- set nrefDataNamePath = [nrefDataPath, i, uuids.nrefDataNameQUuid]|reply_path -%}
       {%- set nrefDataNameReply = repliesMap[nrefDataNamePath] -%}
       {%- set nrefDataWhere = repliesMap[[nrefDataPath, i, uuids.nrefDataWhereQUuid]|reply_path]|reply_str_value -%}
@@ -169,13 +169,13 @@
       {%- set nrefDataConsentAUuid = repliesMap[nrefDataConsentPath]|reply_str_value -%}
 
       {%- set name = "(unknown name)" -%}
-      {%- if nrefDataNameReply and nrefDataNameReply.value.value.type == "IntegrationValue" -%}
+      {%- if nrefDataNameReply and nrefDataNameReply.value.type == "IntegrationValue" -%}
         {%- set question = km.entities.questions[questionUuid] -%}
         {%- set integration = km.entities.integrations[question.integrationUuid] -%}
-        {%- set integrationLink = integration.itemUrl|replace("${id}", nrefDataNameReply.value.value.id) -%}
-        {%- set name = "\"" ~ nrefDataNameReply.value.value.value ~ "\" [" ~ integrationLink ~ "]" -%}
+        {%- set integrationLink = integration.itemUrl|replace("${id}", nrefDataNameReply.value.id) -%}
+        {%- set name = "\"" ~ nrefDataNameReply.value.value ~ "\" [" ~ integrationLink ~ "]" -%}
       {%- elif nrefDataNameReply %}
-        {%- set name = "\"" ~ nrefDataNameReply.value.value.value ~ "\"" -%}
+        {%- set name = "\"" ~ nrefDataNameReply.value.value ~ "\"" -%}
       {%- endif -%}
       {%- if nrefDataWhere -%}
         {%- set name = "\"" ~ name ~ "\" (" ~ nrefDataWhere ~ ")" -%}
@@ -285,9 +285,9 @@
 
 {#- Datasets -#}
 {%- set datasetsPath = [uuids.preservingCUuid, uuids.producingQUuid]|reply_path -%}
-{%- set datasetsReply = repliesMap[datasetsPath]|reply_int_value -%}
+{%- set datasetsItems = repliesMap[datasetsPath]|reply_items -%}
 {%- set datasets = [] -%}
-{%- for i in range(datasetsReply) -%}
+{%- for i in datasetsItems -%}
   {%- set datasetName = repliesMap[[datasetsPath, i, uuids.producingNameQUuid]|reply_path]|reply_str_value -%}
   {%- set datasetDescription = repliesMap[[datasetsPath, i, uuids.producingDescriptionQUuid]|reply_path]|reply_str_value -%}
   {%- set datasetPersonalAUuid = repliesMap[[datasetsPath, i, uuids.producingPersonalQUuid]|reply_path]|reply_str_value -%}
@@ -311,8 +311,8 @@
 
   {%- set identifiers = [] -%}
   {%- set identifiersPath = [datasetsPath, i, uuids.producingIdsQUuid]|reply_path -%}
-  {%- set identifiersReply = repliesMap[identifiersPath]|reply_int_value -%}
-  {%- for j in range(identifiersReply) -%}
+  {%- set identifiersItems = repliesMap[identifiersPath]|reply_items -%}
+  {%- for j in identifiersItems -%}
     {%- set idTypePath = [identifiersPath, j, uuids.producingIdsTypeQUuid]|reply_path -%}
     {%- set idTypeAUuid = repliesMap[idTypePath]|reply_str_value -%}
     {%- set idIdentifierPath = [identifiersPath, j, uuids.producingIdsIdQUuid]|reply_path -%}
@@ -343,8 +343,8 @@
   {%- set publishedAUuid = repliesMap[publishedPath]|reply_str_value -%}
   {%- if publishedAUuid == uuids.publishedYesAUuid -%}
     {%- set distributionsPath = [publishedPath, uuids.publishedYesAUuid, uuids.distrosQUuid]|reply_path -%}
-    {%- set distributionsReply = repliesMap[distributionsPath]|reply_int_value -%}
-    {%- for j in range(distributionsReply) -%}
+    {%- set distributionsItems = repliesMap[distributionsPath]|reply_items -%}
+    {%- for j in distributionsItems -%}
       {%- set distroAccessPath = [distributionsPath, j, uuids.distroAccessQUuid]|reply_path -%}
       {%- set distroAccessAUuid = repliesMap[distroAccessPath]|reply_str_value -%}
 
@@ -359,8 +359,8 @@
 
       {%- set licenses = [] -%}
       {%- set distroLicensesPath = [distributionsPath, j, uuids.distroLicensesQUuid]|reply_path -%}
-      {%- set distroLicensesReply = repliesMap[distroLicensesPath]|reply_int_value -%}
-      {%- for k in range(distroLicensesReply) -%}
+      {%- set distroLicensesItems = repliesMap[distroLicensesPath]|reply_items -%}
+      {%- for k in distroLicensesItems -%}
         {%- set distroLicensesWhatPath = [distroLicensesPath, k, uuids.distroLicensesWhatQUuid]|reply_path -%}
         {%- set distroLicensesWhatAUuid = repliesMap[distroLicensesWhatPath]|reply_str_value -%}
         {%- set distroLicensesStartPath = [distroLicensesPath, k, uuids.distroLicensesStartQUuid]|reply_path -%}

@@ -113,26 +113,34 @@
       "funder_id": {
         "identifier": funderUrl,
         "type": "url"
-      },
-      "grant_id": {
-        "identifier": grantNumber,
-        "type": "other"
       }
     } -%}
     {%- if fundingStatus != "" -%}
       {%- do oneFunding.update({"funding_status": fundingStatus}) -%}
     {%- endif -%}
+    {%- if grantNumber != "" -%}
+      {%- do oneFunding.update({
+        "grant_id": {
+          "identifier": grantNumber,
+          "type": "other"
+        }
+      }) -%}
+    {%- endif -%}
 
-    {%- if funderUrl != "" and grantNumber != "" -%}{# do not use invalid/incomplete #}
+    {%- if funderUrl != "" -%}{# do not use invalid/incomplete #}
       {%- do funding.append(oneFunding) -%}
     {%- endif -%}
   {%- endfor -%}
 
   {%- set project = {
-    "title": projectName,
-    "start": projectStart,
-    "end": projectEnd
+    "title": projectName
   } -%}
+  {%- if projectAbstract != "" -%}
+    {%- do project.update({"start": projectStart}) -%}
+  {%- endif -%}
+  {%- if projectAbstract != "" -%}
+    {%- do project.update({"end": projectEnd}) -%}
+  {%- endif -%}
   {%- if projectAbstract != "" -%}
     {%- do project.update({"description": projectAbstract}) -%}
   {%- endif -%}
@@ -140,7 +148,7 @@
     {%- do project.update({"funding": funding}) -%}
   {%- endif -%}
 
-  {%- if projectName != "" and projectStart != "" and projectEnd != "" -%}{# do not use invalid/incomplete #}
+  {%- if projectName != "" -%}{# do not use invalid/incomplete #}
     {%- do projects.append(project) -%}
   {%- endif -%}
 {%- endfor -%}

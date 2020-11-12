@@ -1,12 +1,11 @@
 {
-  "id": "dsw:rda-madmp:1.0.0",
   "organizationId": "dsw",
   "templateId": "rda-madmp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "name": "maDMP (RDA DMP Common Standard)",
   "description": "Machine-actionable DMP according to RDA Common Standard",
-  "readme": "# Machine-Actionable DMP Template\n\nTemplate based on the [RDA DMP Common Standard (DCS)](https://github.com/RDA-DMP-Common/RDA-DMP-Common-Standard) for machine-actionable Data Management Plans and the provided [JSON schema](https://github.com/RDA-DMP-Common/RDA-DMP-Common-Standard/tree/master/examples/JSON/JSON-schema) for machine-actionable DMPs. It also uses the [DCS Ontology](https://github.com/RDA-DMP-Common/RDA-DMP-Common-Standard/tree/master/ontologies) to allow export in RDF.\n\n## Changelog\n\n### 1.0.0\n\n- Initial version based on results of [RDA hackathon on maDMPs 2020](https://rda-dmp-common.github.io/hackathon-2020/)\n- Compatible with *DCS JSON Schema 1.0* and *DCSO 3.0.2*\n",
   "recommendedPackageId": "dsw:root:2.2.0",
+  "license": "Apache-2.0",
   "metamodelVersion": 2,
   "allowedPackages": [
     {
@@ -178,5 +177,12 @@
         }
       ]
     }
-  ]
+  ],
+  "_tdk": {
+    "version": "2.8.0",
+    "readmeFile": "README.md",
+    "files": [
+      "content/*"
+    ]
+  }
 }

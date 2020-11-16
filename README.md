@@ -4,6 +4,12 @@ Template based on the [RDA DMP Common Standard (DCS)](https://github.com/RDA-DMP
 
 ## Changelog
 
+### 1.3.0
+
+- Fix ethical issues with non-reference datasets
+- Compatible with `dsw:root:2.3.0`
+- Added *data steward* contributor role
+
 ### 1.2.0
 
 - Updated according to [RDA DMP Common Standard v1.1](https://github.com/RDA-DMP-Common/RDA-DMP-Common-Standard/releases/tag/v1.1)

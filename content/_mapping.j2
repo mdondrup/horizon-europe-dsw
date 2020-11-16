@@ -30,6 +30,8 @@
     {%- do contributorRoles.append("data curator") -%}
   {%- elif contributorRoleAUuid == uuids.contributorRoleDataManagerAUuid -%}
     {%- do contributorRoles.append("data manager") -%}
+  {%- elif contributorRoleAUuid == uuids.contributorRoleDataStewardAUuid -%}
+    {%- do contributorRoles.append("data steward") -%}
   {%- elif contributorRoleAUuid == uuids.contributorRoleDistributorAUuid -%}
     {%- do contributorRoles.append("distributor") -%}
   {%- elif contributorRoleAUuid == uuids.contributorRoleEditorAUuid -%}
@@ -178,7 +180,7 @@
 
       {%- set name = "(unknown name)" -%}
       {%- if nrefDataNameReply and nrefDataNameReply.value.type == "IntegrationValue" -%}
-        {%- set question = km.entities.questions[questionUuid] -%}
+        {%- set question = km.entities.questions[uuids.nrefDataNameQUuid] -%}
         {%- set integration = km.entities.integrations[question.integrationUuid] -%}
         {%- set integrationLink = integration.itemUrl|replace("${id}", nrefDataNameReply.value.id) -%}
         {%- set name = "\"" ~ nrefDataNameReply.value.value ~ "\" [" ~ integrationLink ~ "]" -%}

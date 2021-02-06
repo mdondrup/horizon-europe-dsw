@@ -80,11 +80,13 @@
           {%- if "funding_status" in funding.keys() %}
           dcso:fundingStatus {{ funding["funding_status"]|tojson }} ;
           {%- endif %}
+          {%- if "grant_id" in funding.keys() %}
           dcso:hasGrantId
             [ a dcso:GrantId ;
               dcso:identifier_type {{ funding["grant_id"]["type"]|tojson }} ;
               dct:identifier {{ funding["grant_id"]["identifier"]|tojson }} ;
             ] ;
+          {%- endif -%}
         ] {{ ";" if loop.last else "," }}
       {%- endfor -%}
       {%- endif %}

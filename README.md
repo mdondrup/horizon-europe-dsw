@@ -4,6 +4,10 @@ Template based on the [RDA DMP Common Standard (DCS)](https://github.com/RDA-DMP
 
 ## Changelog
 
+### 1.3.1
+
+- Fix problem with failing on missing Grant ID
+
 ### 1.3.0
 
 - Fix ethical issues with non-reference datasets

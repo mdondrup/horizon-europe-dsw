@@ -4,6 +4,11 @@ Template based on the [RDA DMP Common Standard (DCS)](https://github.com/RDA-DMP
 
 ## Changelog
 
+### 1.4.0
+
+- Adjusted to template metamodel version 3 (released in DSW 2.12.0)
+- Fix licenses in RDF formats
+
 ### 1.3.1
 
 - Fix problem with failing on missing Grant ID

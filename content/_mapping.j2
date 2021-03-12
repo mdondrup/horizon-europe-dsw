@@ -93,10 +93,10 @@
   {%- for j in projectFundingItems -%}
     {%- set funderReply = repliesMap[[projectFundingPath, j, uuids.projectFundingFunderQUuid]|reply_path] -%}
     {%- set funderUrl = "" -%}
-    {%- if funderReply and funderReply.value.type == "IntegrationValue" -%}
-      {%- set funderUrl = funderReply.value.id -%}
+    {%- if funderReply and funderReply.value.value.type == "IntegrationType" -%}
+      {%- set funderUrl = funderReply.value.value.id -%}
     {%- elif funderReply -%}
-      {%- set funderUrl = funderReply.value.value -%}
+      {%- set funderUrl = funderReply.value.value.value -%}
     {%- endif -%}
     {%- set grantNumber = repliesMap[[projectFundingPath, j, uuids.projectFundingGrantNumberQUuid]|reply_path]|reply_str_value -%}
     {%- set fundingStatusAUuid = repliesMap[[projectFundingPath, j, uuids.projectFundingStatusQUuid]|reply_path]|reply_str_value -%}
@@ -179,13 +179,13 @@
       {%- set nrefDataConsentAUuid = repliesMap[nrefDataConsentPath]|reply_str_value -%}
 
       {%- set name = "(unknown name)" -%}
-      {%- if nrefDataNameReply and nrefDataNameReply.value.type == "IntegrationValue" -%}
+      {%- if nrefDataNameReply and nrefDataNameReply.value.value.type == "IntegrationType" -%}
         {%- set question = km.entities.questions[uuids.nrefDataNameQUuid] -%}
         {%- set integration = km.entities.integrations[question.integrationUuid] -%}
-        {%- set integrationLink = integration.itemUrl|replace("${id}", nrefDataNameReply.value.id) -%}
-        {%- set name = "\"" ~ nrefDataNameReply.value.value ~ "\" [" ~ integrationLink ~ "]" -%}
+        {%- set integrationLink = integration.itemUrl|replace("${id}", nrefDataNameReply.value.value.id) -%}
+        {%- set name = "\"" ~ nrefDataNameReply.value.value.value ~ "\" [" ~ integrationLink ~ "]" -%}
       {%- elif nrefDataNameReply %}
-        {%- set name = "\"" ~ nrefDataNameReply.value.value ~ "\"" -%}
+        {%- set name = "\"" ~ nrefDataNameReply.value.value.value ~ "\"" -%}
       {%- endif -%}
       {%- if nrefDataWhere -%}
         {%- set name = "\"" ~ name ~ "\" (" ~ nrefDataWhere ~ ")" -%}

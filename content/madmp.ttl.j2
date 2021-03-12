@@ -115,7 +115,7 @@
           dct:title {{ distribution["title"]|tojson }} ;
           dcso:dataAccess {{ distribution["data_access"]|tojson }} ;
           {%- if "license" in distribution.keys() and distribution["license"]|length > 0 %}
-          dcso:hasDistribution
+          dcso:hasLicense
           {%- for license in distribution["license"] %}
             [ a dcso:License ;
               dcso:licenseRef {{ license["license_ref"]|tojson }} ;

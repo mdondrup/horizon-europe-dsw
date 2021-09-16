@@ -1,0 +1,279 @@
+{%- import "content/_mapping.j2" as mapping with context -%}
+{%- set dmp = mapping.madmp["dmp"] -%}
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcso: <https://w3id.org/dcso/ns/core#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix dcs-lang: <https://w3id.org/dcso/id/iso639-3/> .
+
+{# URI mappings #}
+{%- set uri_dmp = dmp["dmp_id"]["identifier"] -%}
+{%- set uri_dmpid = uri_dmp ~ "/identifier" -%}
+
+{%- macro make_uri(identifier, type) -%}
+  {%- if identifier.startswith("http") -%}
+    {{ identifier }}
+  {%- elif type == "orcid" -%}
+    https://orcid.org/{{ identifier }}
+  {%- elif type == "doi" -%}
+    https://doi.org/{{ identifier }}
+  {%- elif type == "handle" -%}
+    https://hdl.handle.net/{{ identifier }}
+  {%- else -%}
+    {{ uri_dmp }}#{{ identifier }}
+  {%- endif -%}
+{%- endmacro -%}
+
+#####################################################################
+## DMP
+#####################################################################
+<{{ uri_dmp }}>
+  a dcso:DMP ;
+  dct:title {{ dmp["title"]|tojson }} ;
+  dct:description {{ dmp["description"]|tojson }} ;
+  dct:language dcs-lang:{{ dmp["language"] }} ;
+  dcso:ethicalIssuesExist {{ dmp["ethical_issues_exist"]|tojson }} ;
+{%- if "ethical_issues_description" in dmp.keys() %}
+  dcso:ethicalIssuesDescription {{ dmp["ethical_issues_description"]|tojson }} ;
+{%- endif %}
+  dcso:hasDMPId <{{ uri_dmpid }}> ;
+{%- if "contact" in dmp.keys() %}
+  dcso:hasContact <{{ make_uri(dmp["contact"]["contact_id"]["identifier"], dmp["contact"]["contact_id"]["type"]) }}> ;
+{%- endif %}
+{%- if "contributor" in dmp.keys() and dmp["contributor"]|length > 0 %}
+  {%- for contributor in dmp["contributor"] %}
+    {%- set uri_contributor = make_uri(contributor["contributor_id"]["identifier"], contributor["contributor_id"]["type"]) %}
+  dcso:hasContributor <{{ uri_contributor }}> ;
+  {%- endfor -%}
+{%- endif %}
+{%- if "project" in dmp.keys() and dmp["project"]|length > 0 %}
+  {%- for project in dmp["project"] %}
+    {%- set uri_project = make_uri("project-" ~ loop.index, "other") %}
+  dcso:hasProject <{{ uri_project }}> ;
+  {%- endfor -%}
+{%- endif %}
+{%- if "dataset" in dmp.keys() and dmp["dataset"]|length > 0 %}
+  {%- for dataset in dmp["dataset"] %}
+    {%- set uri_dataset = make_uri(dataset["dataset_id"]["identifier"], dataset["dataset_id"]["type"]) %}
+  dcso:hasDataset <{{ uri_dataset }}> ;
+  {%- endfor -%}
+{%- endif %}
+  dct:created "{{ dmp["created"] }}"^^xsd:dateTime ;
+  dct:modified "{{ dmp["modified"] }}"^^xsd:dateTime .
+
+
+#####################################################################
+# DMP identifier
+#####################################################################
+<{{ uri_dmpid }}> a dcso:DMPId ;
+  dcso:identifier_type {{ dmp["dmp_id"]["type"]|tojson }} ;
+  dct:identifier {{ dmp["dmp_id"]["identifier"]|tojson }} .
+
+
+{%- if "contact" in dmp.keys() %}
+#####################################################################
+# Contact
+#####################################################################
+{%- set uri_contact = make_uri(dmp["contact"]["contact_id"]["identifier"], dmp["contact"]["contact_id"]["type"]) %}
+{%- set uri_contact_id = uri_contact ~ "/identifier" %}
+<{{ uri_contact }}> a dcso:Contact ;
+  dcso:hasContactId <{{ uri_contact_id }}> ;
+  foaf:mbox {{ dmp["contact"]["mbox"]|tojson }} ;
+  foaf:name {{ dmp["contact"]["name"]|tojson }} .
+
+<{{ uri_contact_id }}> a dcso:ContactId ;
+  dcso:identifier_type {{ dmp["contact"]["contact_id"]["type"]|tojson }} ;
+  dct:identifier {{ dmp["contact"]["contact_id"]["identifier"]|tojson }} .
+{%- endif %}
+
+{%- if "contributor" in dmp.keys() and dmp["contributor"]|length > 0 %}
+#####################################################################
+# Contributors
+#####################################################################
+  {%- for contributor in dmp["contributor"] %}
+    {%- set uri_contributor = make_uri(contributor["contributor_id"]["identifier"], contributor["contributor_id"]["type"]) %}
+    {%- set uri_contributor_id = uri_contributor ~ "/identifier" %}
+
+<{{ uri_contributor }}> a dcso:Contributor ;
+  dcso:hasContributorId <{{ uri_contributor_id }}> ;
+  {%- if "mbox" in contributor.keys() %}
+  foaf:mbox {{ contributor["mbox"]|tojson }} ;
+  {%- endif %}
+  {%- if contributor["role"]|length > 0 %}
+  dcso:role {{ contributor["role"][0]|tojson }} ;
+  {%- endif %}
+  foaf:name {{ contributor["name"]|tojson }} .
+
+<{{ uri_contributor_id }}> a dcso:ContactId ;
+  dcso:identifier_type {{ contributor["contributor_id"]["type"]|tojson }} ;
+  dct:identifier {{ contributor["contributor_id"]["identifier"]|tojson }} .
+  {%- endfor -%}
+{%- endif %}
+
+{%- if "project" in dmp.keys() and dmp["project"]|length > 0 %}
+#####################################################################
+# Projects
+#####################################################################
+  {%- for project in dmp["project"] %}
+    {%- set uri_project = make_uri("project-" ~ loop.index, "other") %}
+<{{ uri_project }}> a dcso:Project ;
+  dct:title {{ project["title"]|tojson }} ;
+  {%- if "description" in project.keys() %}
+  dct:description {{ project["description"]|tojson }} ;
+  {%- endif %}
+  {%- if "funding" in project.keys() and project["funding"]|length > 0 %}
+    {%- for funding in project["funding"] %}
+      {%- set uri_funding = make_uri(funding["funder_id"]["identifier"], funding["funder_id"]["type"]) %}
+  dcso:hasFunding <{{uri_funding}}> ;
+    {%- endfor -%}
+  {%- endif %}
+  dcso:start {{ project["start"]|tojson }}^^xsd:date ;
+  dcso:end {{ project["end"]|tojson }}^^xsd:date .
+  {%- endfor -%}
+{%- endif %}
+
+{%- if "project" in dmp.keys() and dmp["project"]|length > 0 %}
+#####################################################################
+# Fundings
+#####################################################################
+  {%- for project in dmp["project"] %}
+    {%- set projectN = loop.index -%}
+    {%- if "funding" in project.keys() and project["funding"]|length > 0 %}
+    {%- for funding in project["funding"] %}
+      {%- set uri_funding = make_uri("funding-" ~ projectN ~ "-" ~ loop.index, "other") %}
+      {%- set uri_funding_funder = make_uri(funding["funder_id"]["identifier"], funding["funder_id"]["type"]) %}
+<{{ uri_funding }}> a dcso:Funding ;
+  {%- if "grant_id" in funding.keys() %}
+    {%- set uri_funding_grant = make_uri(funding["grant_id"]["identifier"], funding["grant_id"]["type"]) %}
+  dcso:hasGrantId <{{uri_funding_grant}}> ;
+  {%- endif -%}
+  {%- if "funding_status" in funding.keys() %}
+  dcso:fundingStatus {{ funding["funding_status"]|tojson }} ;
+  {%- endif %}
+  dcso:hasFunderId <{{uri_funding_funder}}> .
+  {%- endfor -%}
+  {%- endif %}
+  {%- endfor -%}
+{%- endif %}
+
+{%- if "project" in dmp.keys() and dmp["project"]|length > 0 %}
+#####################################################################
+# Funder IDs
+#####################################################################
+  {%- for project in dmp["project"] %}
+    {%- if "funding" in project.keys() and project["funding"]|length > 0 %}
+    {%- for funding in project["funding"] %}
+      {%- set uri_funding_funder = make_uri(funding["funder_id"]["identifier"], funding["funder_id"]["type"]) %}
+<{{uri_funding_funder}}> a dcso:FunderId ;
+  dcso:identifier_type {{ funding["funder_id"]["type"]|tojson }} ;
+  dct:identifier {{ funding["funder_id"]["identifier"]|tojson }} .
+    {%- endfor -%}
+    {%- endif %}
+    {%- endfor -%}
+{%- endif %}
+
+{%- if "project" in dmp.keys() and dmp["project"]|length > 0 %}
+#####################################################################
+# Grant IDs
+#####################################################################
+  {%- for project in dmp["project"] %}
+    {%- set projectN = loop.index -%}
+    {%- if "funding" in project.keys() and project["funding"]|length > 0 %}
+    {%- for funding in project["funding"] %}
+  {%- if "grant_id" in funding.keys() %}
+    {%- set uri_funding_grant = make_uri(funding["grant_id"]["identifier"], funding["grant_id"]["type"]) %}
+<{{uri_funding_grant}}> a dcso:GrantId ;
+  dcso:identifier_type {{ funding["grant_id"]["type"]|tojson }} ;
+  dct:identifier {{ funding["grant_id"]["identifier"]|tojson }} .
+  {%- endif -%}
+  {%- endfor -%}
+  {%- endif %}
+  {%- endfor -%}
+{%- endif %}
+
+{%- if "dataset" in dmp.keys() and dmp["dataset"]|length > 0 %}
+#####################################################################
+# Datasets
+#####################################################################
+  {%- for dataset in dmp["dataset"] %}
+    {%- set uri_dataset = make_uri(dataset["dataset_id"]["identifier"], dataset["dataset_id"]["type"]) %}
+    {%- set uri_dataset_id = uri_dataset ~ "/identifier" %}
+<{{ uri_dataset }}> a dcso:Dataset ;
+  dcso:hasDatasetId <{{ uri_dataset_id }}> ;
+  dct:title {{ dataset["title"]|tojson }} ;
+  {%- if "description" in dataset.keys() %}
+  dct:description {{ dataset["description"]|tojson }} ;
+  {%- endif %}
+  {%- if "distribution" in dataset.keys() and dataset["distribution"]|length > 0 %}
+  {%- for distribution in dataset["distribution"] %}
+    {%- set uri_distribution = uri_dataset ~ "/distribution/" ~ loop.index %}
+  dcso:hasDistribution <{{ uri_distribution }}> ;
+  {%- endfor -%}
+  {%- endif %}
+  dcso:personalData {{ dataset["personal_data"]|tojson }} ;
+  dcso:sensitiveData {{ dataset["sensitive_data"]|tojson }} .
+  {%- endfor -%}
+{%- endif %}
+
+{%- if "dataset" in dmp.keys() and dmp["dataset"]|length > 0 %}
+#####################################################################
+# Dataset IDs
+#####################################################################
+  {%- for dataset in dmp["dataset"] %}
+    {%- set uri_dataset = make_uri(dataset["dataset_id"]["identifier"], dataset["dataset_id"]["type"]) %}
+    {%- set uri_dataset_id = uri_dataset ~ "/identifier" %}
+<{{ uri_dataset_id }}> a dcso:DatasetId ;
+  dcso:identifier_type {{ dataset["dataset_id"]["type"]|tojson }} ;
+  dct:identifier {{ dataset["dataset_id"]["identifier"]|tojson }} .
+  {%- endfor -%}
+{%- endif %}
+
+{%- if "dataset" in dmp.keys() and dmp["dataset"]|length > 0 %}
+#####################################################################
+# Distributions
+#####################################################################
+  {%- for dataset in dmp["dataset"] %}
+    {%- set uri_dataset = make_uri(dataset["dataset_id"]["identifier"], dataset["dataset_id"]["type"]) %}
+  {%- if "distribution" in dataset.keys() and dataset["distribution"]|length > 0 %}
+  {%- for distribution in dataset["distribution"] %}
+    {%- set uri_distribution = uri_dataset ~ "/distribution/" ~ loop.index %}
+<{{ uri_distribution }}> a dcso:Distribution ;
+  dct:title {{ distribution["title"]|tojson }} ;
+  {%- if "license" in distribution.keys() and distribution["license"]|length > 0 %}
+  {%- for license in distribution["license"] %}
+    {%- set uri_license = uri_distribution ~ "/license/" ~ loop.index %}
+  dcso:hasLicense <{{ uri_license }}> ;
+  {%- endfor -%}
+  {%- endif %}
+  dcso:dataAccess {{ distribution["data_access"]|tojson }} .
+  {%- endfor -%}
+  {%- endif %}
+  {%- endfor -%}
+{%- endif %}
+
+{%- if "dataset" in dmp.keys() and dmp["dataset"]|length > 0 %}
+#####################################################################
+# Licenses
+#####################################################################
+  {%- for dataset in dmp["dataset"] %}
+    {%- set uri_dataset = make_uri(dataset["dataset_id"]["identifier"], dataset["dataset_id"]["type"]) %}
+  {%- if "distribution" in dataset.keys() and dataset["distribution"]|length > 0 %}
+  {%- for distribution in dataset["distribution"] %}
+    {%- set uri_distribution = uri_dataset ~ "/distribution/" ~ loop.index %}
+  {%- if "license" in distribution.keys() and distribution["license"]|length > 0 %}
+  {%- for license in distribution["license"] %}
+    {%- set uri_license = uri_distribution ~ "/license/" ~ loop.index %}
+<{{ uri_license }}> a dcso:License ;
+  dcso:licenseRef {{ license["license_ref"]|tojson }} ;
+  dcso:startDate {{ license["start_date"]|tojson }}^^xsd:date .
+  {%- endfor -%}
+  {%- endif %}
+  {%- endfor -%}
+  {%- endif %}
+  {%- endfor -%}
+{%- endif %}
+
+# This file has been exported from Data Stewardship Wizard (ds-wizard.org)
+# It is using DCSO 3.0.2 (see https://github.com/RDA-DMP-Common/RDA-DMP-Common-Standard)
+

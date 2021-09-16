@@ -137,20 +137,20 @@
   {%- set project = {
     "title": projectName
   } -%}
-  {%- if projectAbstract != "" -%}
+  {%- if projectStart -%}
     {%- do project.update({"start": projectStart}) -%}
   {%- endif -%}
-  {%- if projectAbstract != "" -%}
+  {%- if projectEnd -%}
     {%- do project.update({"end": projectEnd}) -%}
   {%- endif -%}
-  {%- if projectAbstract != "" -%}
+  {%- if projectAbstract -%}
     {%- do project.update({"description": projectAbstract}) -%}
   {%- endif -%}
   {%- if funding|length > 0 -%}
     {%- do project.update({"funding": funding}) -%}
   {%- endif -%}
 
-  {%- if projectName != "" -%}{# do not use invalid/incomplete #}
+  {%- if projectName and projectStart and projectEnd -%}{# do not use invalid/incomplete #}
     {%- do projects.append(project) -%}
   {%- endif -%}
 {%- endfor -%}

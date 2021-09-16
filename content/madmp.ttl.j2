@@ -13,7 +13,7 @@
 
 {%- macro make_uri(identifier, type) -%}
   {%- if identifier.startswith("http") -%}
-    <{{ identifier }}>
+    {{ identifier }}
   {%- elif type == "orcid" -%}
     https://orcid.org/{{ identifier }}
   {%- elif type == "doi" -%}

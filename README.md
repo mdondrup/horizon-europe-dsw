@@ -4,6 +4,10 @@ Template based on the [RDA DMP Common Standard (DCS)](https://github.com/RDA-DMP
 
 ## Changelog
 
+### 1.6.0
+
+- Added support for Turtle export without Blank nodes
+
 ### 1.5.0
 
 - Adjusted to template metamodel version 4 (released in DSW 3.2.0)

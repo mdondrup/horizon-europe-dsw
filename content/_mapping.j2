@@ -182,7 +182,7 @@
       {%- if nrefDataNameReply and nrefDataNameReply.value.value.type == "IntegrationType" -%}
         {%- set question = km.entities.questions[uuids.nrefDataNameQUuid] -%}
         {%- set integration = km.entities.integrations[question.integrationUuid] -%}
-        {%- set integrationLink = integration.itemUrl|replace("${id}", nrefDataNameReply.value.value.id) -%}
+        {%- set integrationLink = integration.responseItemUrl|replace("${id}", nrefDataNameReply.value.value.id) -%}
         {%- set name = "\"" ~ nrefDataNameReply.value.value.value ~ "\" [" ~ integrationLink ~ "]" -%}
       {%- elif nrefDataNameReply %}
         {%- set name = "\"" ~ nrefDataNameReply.value.value.value ~ "\"" -%}

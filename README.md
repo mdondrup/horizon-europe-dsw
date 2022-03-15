@@ -4,6 +4,10 @@ Template based on the [RDA DMP Common Standard (DCS)](https://github.com/RDA-DMP
 
 ## Changelog
 
+### 1.11.0
+
+- Compatible with `dsw:root:2.4.0`
+
 ### 1.10.0
 
 - Adjusted to template metamodel version 8 (released in DSW 3.8.0)

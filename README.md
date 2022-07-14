@@ -4,6 +4,10 @@ Template based on the [RDA DMP Common Standard (DCS)](https://github.com/RDA-DMP
 
 ## Changelog
 
+### 1.13.1
+
+- Fix defaults to prevent failure "Object of type Undefined is not JSON serializable"
+
 ### 1.13.0
 
 - Adjusted to template metamodel version 10 (released in DSW 3.12.0)

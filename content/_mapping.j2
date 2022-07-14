@@ -47,10 +47,10 @@
   {%- endfor -%}
   {%- set contributor = {
     "contributor_id": {
-      "identifier": contributorOrcid,
+      "identifier": contributorOrcid|default(""),
       "type": "orcid"
     },
-    "name": contributorName,
+    "name": contributorName|default(""),
     "role": contributorRoles|sort
   } -%}
   {%- if contributorEmail != "" -%}
@@ -64,7 +64,6 @@
     {%- endif -%}
   {%- endif -%}
 {%- endfor -%}
--%}
 {#- Projects -#}
 {%- set projectsPath = [uuids.adminDetailsCUuid, uuids.projectsQUuid]|reply_path -%}
 {%- set projectsItems = repliesMap[projectsPath]|reply_items -%}
@@ -101,7 +100,7 @@
 
     {%- set oneFunding = {
       "funder_id": {
-        "identifier": funderUrl,
+        "identifier": funderUrl|default(""),
         "type": "url"
       }
     } -%}
@@ -111,7 +110,7 @@
     {%- if grantNumber != "" -%}
       {%- do oneFunding.update({
         "grant_id": {
-          "identifier": grantNumber,
+          "identifier": grantNumber|default(""),
           "type": "other"
         }
       }) -%}
@@ -344,8 +343,8 @@
 
     {%- if idIdentifier -%}
       {%- do identifiers.append({
-        "identifier": idIdentifier, 
-        "type": idType
+        "identifier": idIdentifier|default(""), 
+        "type": idType|default("")
       }) -%}
     {%- endif -%}
   {%- endfor -%}
@@ -390,8 +389,8 @@
         {%- endif -%}
 
         {%- set license = {
-          "license_ref": licenseRef,
-          "start_date": distroLicensesStart
+          "license_ref": licenseRef|default(""),
+          "start_date": distroLicensesStart|default("")
         } -%}
         {%- if licenseRef != "" and distroLicensesStart != "" -%}
           {%- do licenses.append(license) -%}
@@ -399,8 +398,8 @@
       {%- endfor -%}
 
       {%- set distribution = {
-        "title": datasetName,
-        "data_access": distroAccess
+        "title": datasetName|default(""),
+        "data_access": distroAccess|default("")
       } -%}
       {%- if licenses|length > 0 -%}
         {%- do distribution.update({"license": licenses}) -%}
@@ -417,9 +416,9 @@
         "identifier": "",
         "type": "other"
     },
-    "title": datasetName,
-    "personal_data": personalData,
-    "sensitive_data": sensitiveData
+    "title": datasetName|default(""),
+    "personal_data": personalData|default(""),
+    "sensitive_data": sensitiveData|default("")
   } -%}
   {%- if datasetDescription -%}
     {%- do dataset.update({"description": datasetDescription}) -%}
@@ -436,14 +435,14 @@
 {%- set ethicalIssuesDescription = ethicalIssuesDescriptions|join(" ") -%}
 {#- DMP internal object -#}
 {%- set dmp = {
-  "title": ctx.questionnaireName,
-  "description": madmpDescription,
+  "title": ctx.questionnaireName|default(""),
+  "description": madmpDescription|default(""),
   "language": "eng",
-  "dmp_id": madmpDmpId,
-  "contributor": contributors,
-  "project": projects,
-  "ethical_issues_exist": ethicalIssuesExist,
-  "dataset": datasets,
+  "dmp_id": madmpDmpId|default(""),
+  "contributor": contributors|default([]),
+  "project": projects|default([]),
+  "ethical_issues_exist": ethicalIssuesExist|default(""),
+  "dataset": datasets|default([]),
   "created": ctx.createdAt|datetime_format("%Y-%m-%dT%H:%M:%SZ"),
   "modified": ctx.updatedAt|datetime_format("%Y-%m-%dT%H:%M:%SZ")
 } -%}

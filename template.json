@@ -1,12 +1,11 @@
 {
   "organizationId": "dsw",
   "templateId": "rda-madmp",
-  "version": "1.13.1",
+  "version": "1.14.0",
   "name": "maDMP (RDA DMP Common Standard)",
   "description": "Machine-actionable DMP according to RDA Common Standard",
-  "recommendedPackageId": "dsw:root:2.4.0",
   "license": "Apache-2.0",
-  "metamodelVersion": 10,
+  "metamodelVersion": 11,
   "allowedPackages": [
     {
       "orgId": "dsw",
@@ -25,9 +24,7 @@
     {
       "uuid": "0369cf46-a50e-4be5-9656-7b17227c7818",
       "name": "JSON",
-      "shortName": "json",
       "icon": "fas fa-globe",
-      "color": "#f15a24",
       "steps": [
         {
           "name": "jinja",
@@ -42,9 +39,7 @@
     {
       "uuid": "03d39151-ccbb-433e-80c8-17d94b94173a",
       "name": "Turtle (no blank nodes)",
-      "shortName": "ttl",
       "icon": "fas fa-share-alt",
-      "color": "#f15a24",
       "steps": [
         {
           "name": "jinja",
@@ -59,9 +54,7 @@
     {
       "uuid": "9c7d572e-c273-4323-97a4-ab38f943c33a",
       "name": "Turtle",
-      "shortName": "ttl",
       "icon": "fas fa-share-alt",
-      "color": "#f15a24",
       "steps": [
         {
           "name": "jinja",
@@ -77,9 +70,7 @@
     {
       "uuid": "af4441a5-17af-4a48-91cb-635a4e43afad",
       "name": "N3",
-      "shortName": "n3",
       "icon": "fas fa-share-alt",
-      "color": "#f15a24",
       "steps": [
         {
           "name": "jinja",
@@ -101,9 +92,7 @@
     {
       "uuid": "3799b5ef-3a85-4753-b500-250370bf642f",
       "name": "RDF/XML",
-      "shortName": "rdf",
       "icon": "fas fa-share-alt",
-      "color": "#f15a24",
       "steps": [
         {
           "name": "jinja",
@@ -125,9 +114,7 @@
     {
       "uuid": "889566fd-c930-419b-9514-169211f357c5",
       "name": "JSON-LD",
-      "shortName": "json-ld",
       "icon": "fas fa-share-alt",
-      "color": "#f15a24",
       "steps": [
         {
           "name": "jinja",
@@ -149,9 +136,7 @@
     {
       "uuid": "bd8ec4b2-fbea-401f-a898-681fbb03f2be",
       "name": "N-Triples",
-      "shortName": "nt",
       "icon": "fas fa-share-alt",
-      "color": "#f15a24",
       "steps": [
         {
           "name": "jinja",
@@ -173,9 +158,7 @@
     {
       "uuid": "5978ca10-433b-4c53-a810-f98841f497d0",
       "name": "Trig",
-      "shortName": "trig",
       "icon": "fas fa-share-alt",
-      "color": "#f15a24",
       "steps": [
         {
           "name": "jinja",
@@ -196,7 +179,7 @@
     }
   ],
   "_tdk": {
-    "version": "3.3.0",
+    "version": "3.20.0",
     "readmeFile": "README.md",
     "files": [
       "content/*"

@@ -2,15 +2,21 @@
 
 Template based on the [RDA DMP Common Standard (DCS)](https://github.com/RDA-DMP-Common/RDA-DMP-Common-Standard) for machine-actionable Data Management Plans and the provided [JSON schema](https://github.com/RDA-DMP-Common/RDA-DMP-Common-Standard/tree/master/examples/JSON/JSON-schema) for machine-actionable DMPs. It also uses the [DCS Ontology](https://github.com/RDA-DMP-Common/RDA-DMP-Common-Standard/tree/master/ontologies) to allow export in RDF.
 
+
+## Issues and Contributing
+
+This document template for DSW is available as open-source via GitHub Repository [ds-wizard/madmp-template](https://github.com/ds-wizard/madmp-template), you can [report issues](https://github.com/ds-wizard/madmp-template/issues) there and fork it for customisations or contributions.
+
+
 ## Changelog
+
+### 1.14.0
+
+- Adjusted to template metamodel version 11 (released in DSW 3.20.0)
 
 ### 1.13.1
 
 - Fix defaults to prevent failure "Object of type Undefined is not JSON serializable"
-
-### 1.13.0
-
-- Adjusted to template metamodel version 10 (released in DSW 3.12.0)
 
 ### 1.12.0
 

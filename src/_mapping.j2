@@ -1,12 +1,13 @@
 {#- This file contains the mapping with dsw:root KM -#}
-{%- import "content/_uuids.j2" as uuids with context -%}
+{%- import "src/_uuids.j2" as uuids with context -%}
+{%- import "src/globals.j2" as globals with context -%}
 {%- set km = ctx.knowledgeModel -%}
 {%- set repliesMap = ctx.questionnaireReplies -%}
 {#- Basic DMP metadata -#}
 {#- maDMP variables -#}
-{%- set madmpDescription = "This maDMP has been created using Data Stewardship Wizard (DSW, ds-wizard.org) and is based on knowledge model " ~ ctx.package.name ~ " (" ~ [ctx.package.organizationId, ctx.package.kmId, ctx.package.version]|join(":") ~ "). The questionnaire used for this DMP is identified by UUID \"" ~ ctx.questionnaireUuid ~ "\" within " ~ ctx.config.clientUrl ~ " DSW instance." -%}
+{%- set madmpDescription = "This maDMP has been created using " ~ globals.fullName ~ " (" ~ globals.link ~ ") and is based on knowledge model " ~ ctx.package.name ~ " (" ~ [ctx.package.organizationId, ctx.package.kmId, ctx.package.version]|join(":") ~ "). The questionnaire used for this DMP is identified by UUID \"" ~ ctx.questionnaireUuid ~ "\" within " ~ ctx.config.clientUrl ~ " " ~ globals.name ~ " instance." -%}
 {%- set madmpDmpId = {
-  "identifier": ctx.config.clientUrl ~ "/questionnaires/" ~ ctx.questionnaireUuid,
+  "identifier": ctx.config.clientUrl ~ "/projects/" ~ ctx.questionnaireUuid,
   "type": "url"
 }
 -%}
@@ -80,7 +81,7 @@
   {%- for j in projectFundingItems -%}
     {%- set funderReply = repliesMap[[projectFundingPath, j, uuids.projectFundingFunderQUuid]|reply_path] -%}
     {%- set funderUrl = "" -%}
-    {%- if funderReply and funderReply.value.value.type == "IntegrationType" -%}
+    {%- if funderReply and funderReply.value.value.type == "IntegrationType" and funderReply.value.value.id -%}
       {%- set funderUrl = funderReply.value.value.id -%}
     {%- elif funderReply -%}
       {%- set funderUrl = funderReply.value.value.value -%}
@@ -160,7 +161,7 @@
     {%- set nrefDataConsentAUuid = repliesMap[nrefDataConsentPath]|reply_str_value -%}
 
     {%- set name = "(unknown name)" -%}
-    {%- if nrefDataNameReply and nrefDataNameReply.value.value.type == "IntegrationType" -%}
+    {%- if nrefDataNameReply and nrefDataNameReply.value.value.type == "IntegrationType" and nrefDataNameReply.value.value.id -%}
       {%- set question = km.entities.questions[uuids.nrefDataNameQUuid] -%}
       {%- set integration = km.entities.integrations[question.integrationUuid] -%}
       {%- set integrationLink = integration.itemUrl|replace("${id}", nrefDataNameReply.value.value.id) -%}

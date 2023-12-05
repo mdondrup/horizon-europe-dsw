@@ -1,11 +1,11 @@
 {
   "organizationId": "dsw",
   "templateId": "rda-madmp",
-  "version": "1.14.0",
+  "version": "1.15.0",
   "name": "maDMP (RDA DMP Common Standard)",
   "description": "Machine-actionable DMP according to RDA Common Standard",
   "license": "Apache-2.0",
-  "metamodelVersion": 11,
+  "metamodelVersion": 12,
   "allowedPackages": [
     {
       "orgId": "dsw",
@@ -29,7 +29,7 @@
         {
           "name": "jinja",
           "options": {
-            "template": "content/madmp.json.j2",
+            "template": "src/madmp.json.j2",
             "content-type": "application/json",
             "extension": "json"
           }
@@ -44,7 +44,7 @@
         {
           "name": "jinja",
           "options": {
-            "template": "content/madmp2.ttl.j2",
+            "template": "src/madmp2.ttl.j2",
             "content-type": "text/ttl",
             "extension": "ttl"
           }
@@ -59,7 +59,7 @@
         {
           "name": "jinja",
           "options": {
-            "template": "content/madmp.ttl.j2",
+            "template": "src/madmp.ttl.j2",
             "content-type": "text/ttl",
             "extension": "ttl"
           }
@@ -75,7 +75,7 @@
         {
           "name": "jinja",
           "options": {
-            "template": "content/madmp.ttl.j2",
+            "template": "src/madmp.ttl.j2",
             "content-type": "text/ttl",
             "extension": "ttl"
           }
@@ -97,7 +97,7 @@
         {
           "name": "jinja",
           "options": {
-            "template": "content/madmp.ttl.j2",
+            "template": "src/madmp.ttl.j2",
             "content-type": "text/ttl",
             "extension": "ttl"
           }
@@ -119,7 +119,7 @@
         {
           "name": "jinja",
           "options": {
-            "template": "content/madmp.ttl.j2",
+            "template": "src/madmp.ttl.j2",
             "content-type": "text/ttl",
             "extension": "ttl"
           }
@@ -141,7 +141,7 @@
         {
           "name": "jinja",
           "options": {
-            "template": "content/madmp.ttl.j2",
+            "template": "src/madmp.ttl.j2",
             "content-type": "text/ttl",
             "extension": "ttl"
           }
@@ -157,13 +157,13 @@
     },
     {
       "uuid": "5978ca10-433b-4c53-a810-f98841f497d0",
-      "name": "Trig",
+      "name": "TriG",
       "icon": "fas fa-share-alt",
       "steps": [
         {
           "name": "jinja",
           "options": {
-            "template": "content/madmp.ttl.j2",
+            "template": "src/madmp.ttl.j2",
             "content-type": "text/ttl",
             "extension": "ttl"
           }
@@ -179,10 +179,10 @@
     }
   ],
   "_tdk": {
-    "version": "3.20.0",
+    "version": "4.1.0",
     "readmeFile": "README.md",
     "files": [
-      "content/*"
+      "src/**/*"
     ]
   }
 }

@@ -3,12 +3,31 @@
 Template based on the [RDA DMP Common Standard (DCS)](https://github.com/RDA-DMP-Common/RDA-DMP-Common-Standard) for machine-actionable Data Management Plans and the provided [JSON schema](https://github.com/RDA-DMP-Common/RDA-DMP-Common-Standard/tree/master/examples/JSON/JSON-schema) for machine-actionable DMPs. It also uses the [DCS Ontology](https://github.com/RDA-DMP-Common/RDA-DMP-Common-Standard/tree/master/ontologies) to allow export in RDF.
 
 
+## Usage
+
+This template is available through [DSW Registry](https://registry.ds-wizard.org/templates).
+
+
 ## Issues and Contributing
 
 This document template for DSW is available as open-source via GitHub Repository [ds-wizard/madmp-template](https://github.com/ds-wizard/madmp-template), you can [report issues](https://github.com/ds-wizard/madmp-template/issues) there and fork it for customisations or contributions.
 
 
+### Contributors
+
+* **Marek Suchánek** <[marek.suchanek@ds-wizard.org](mailto:marek.suchanek@ds-wizard.org)>
+  * ORCID: [0000-0001-7525-9218](https://orcid.org/0000-0001-7525-9218)
+  * GitHub: [@MarekSuchanek](https://github.com/MarekSuchanek)
+* **Kryštof Komanec** <[krystof.komanec@ds-wizard.org](mailto:krystof.komanec@ds-wizard.org)>
+  * ORCID: [0000-0003-3856-1682](https://orcid.org/0000-0003-3856-1682)
+  * GitHub: [@krystofkomanec](https://github.com/krystofkomanec)
+
+
 ## Changelog
+
+### 1.16.0
+
+- Adjusted to template metamodel version 13 (released in DSW 4.3.0)
 
 ### 1.15.0
 

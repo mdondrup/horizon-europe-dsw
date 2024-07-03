@@ -21,9 +21,16 @@ This document template for DSW is available as open-source via GitHub Repository
 * **Kryštof Komanec** <[krystof.komanec@ds-wizard.org](mailto:krystof.komanec@ds-wizard.org)>
   * ORCID: [0000-0003-3856-1682](https://orcid.org/0000-0003-3856-1682)
   * GitHub: [@krystofkomanec](https://github.com/krystofkomanec)
+* **Jana Martínková** <[jana.martinkova@ds-wizard.org]>(mailto:jana.martinkova@ds-wizard.org)>
+  * ORCID: [0000-0001-8575-6533](https://orcid.org/0000-0001-8575-6533/)
+  * GitHub: [@jmartinkova](https://github.com/jmartinkova)
 
 
 ## Changelog
+
+### 1.17.0
+
+- Add costs in project
 
 ### 1.16.0
 

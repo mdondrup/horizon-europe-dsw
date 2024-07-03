@@ -59,8 +59,14 @@
   dcso:hasDataset <{{ uri_dataset }}> ;
   {%- endfor -%}
 {%- endif %}
+{%- if "cost" in dmp.keys() and dmp["cost"]|length > 0 %}
+  {%- for cost in dmp["cost"] %}
+    {%- set uri_cost = make_uri("cost-" ~ loop.index, "other") %}
+  dcso:hasCost <{{uri_cost}}> ;
+  {%- endfor -%}
+{%- endif %}
   dct:created "{{ dmp["created"] }}"^^xsd:dateTime ;
-  dct:modified "{{ dmp["modified"] }}"^^xsd:dateTime .
+  dct:modified "{{ dmp["modified"] }}"^^xsd:dateTime  .
 
 
 #####################################################################
@@ -271,6 +277,26 @@
   {%- endif %}
   {%- endfor -%}
   {%- endif %}
+  {%- endfor -%}
+{%- endif %}
+
+{%- if "cost" in dmp.keys() and dmp["cost"]|length > 0 %}
+#####################################################################
+# Costs
+#####################################################################
+  {%- for cost in dmp["cost"] %}
+    {%- set uri_cost = make_uri("cost-" ~ loop.index, "other") %}
+<{{ uri_cost }}> a dcso:Cost ;
+  {%- if "value" in cost.keys() %}
+  dcso:value {{ cost["value"]|tojson }} ;
+  {%- endif -%}
+  {%- if "currency_code" in cost.keys() %}
+  dcso:currency_code {{ cost["currency_code"]|tojson  }} ;
+  {%- endif -%}
+  {%- if "description" in cost.keys() %}
+  dct:description {{ cost["description"]|tojson }} ;
+  {%- endif %}
+  dct:title {{ cost["title"]|tojson }} .
   {%- endfor -%}
 {%- endif %}
 

@@ -433,6 +433,67 @@
   {%- do datasets.append(dataset) -%}
 {%- endfor -%}
 
+{#- Cost -#}
+{%- set projectsPath = [uuids.adminDetailsCUuid, uuids.projectsQUuid]|reply_path -%}
+{%- set projectsItems = repliesMap[projectsPath]|reply_items -%}
+{%- set cost = [] -%}
+{%- for n in projectsItems -%}
+  {%- set projectCostPath = [projectsPath, n, uuids.costQUuid]|reply_path -%}
+  {%- set projectCostItems = repliesMap[projectCostPath]|reply_items -%}
+  {%- for m in projectCostItems -%}
+    {%- set costTitle = repliesMap[[projectCostPath, m, uuids.costTitleQUuid]|reply_path]|reply_str_value -%}
+    {%- set costAmount = repliesMap[[projectCostPath, m, uuids.costAmountQUuid]|reply_path]|reply_str_value -%}
+    {%- set costCurrencyReply = repliesMap[[projectCostPath, m, uuids.costCurrencyQUuid]|reply_path] -%}
+    {%- set costDescriptionReply = repliesMap[[projectCostPath, m, uuids.costDescriptionQUuid]|reply_path]|reply_str_value -%}
+    {%- set costAllocationReply = repliesMap[[projectCostPath, m, uuids.costAllocationQUuid]|reply_path]|reply_items -%}
+    {%- set costAllocation = [] -%}
+    {%- set costAllocations = [] -%}
+
+    {%- if uuids.costAllocationFindabilityAUuid in costAllocationReply -%}
+      {%- do costAllocations.append("ensuring findability") -%}
+    {%- endif -%}
+    {%- if uuids.costAllocationAccessibilityAUuid in costAllocationReply -%}
+      {%- do costAllocations.append("ensuring accessibility") -%}
+    {%- endif -%}
+    {%- if uuids.costAllocationInteroperabilityAUuid in costAllocationReply -%}
+      {%- do costAllocations.append("ensuring interoperability") -%}
+    {%- endif -%}
+    {%- if uuids.costAllocationReusabilityAUuid in costAllocationReply -%}
+      {%- do costAllocations.append("ensuring reusability") -%}
+    {%- endif -%}
+    {%- if uuids.costManagementAUuid in costAllocationReply -%}
+      {%- do costAllocations.append("supporting management") -%}
+    {%- endif -%}
+
+    {%- if costAllocations|length > 0 -%}
+      {%- do costAllocation.append("This resource is allocated for ") -%}
+      {%- if costAllocations|length > 2 -%}
+        {%- do costAllocation.append(costAllocations[0:-1]|join(", ") ~ ", and "~  costAllocations[-1] ~ " of data.") -%}
+      {%- elif costAllocations|length == 2 -%}
+        {%- do costAllocation.append( costAllocations[0]~" and" ~costAllocations[1]~ " of data.")-%}
+      {%- else -%}
+        {%- do costAllocation.append( costAllocations[0]~ "of data.") -%}
+      {%- endif %}
+    {%- endif -%}
+
+    {%- set oneCost = {
+      "title" : costTitle|default(""),
+    } -%}
+    {%- if costAmount -%}
+      {%- do oneCost.update({"value": costAmount|int}) -%}
+    {%- endif -%}
+    {%- if costCurrencyReply -%}
+      {%- do oneCost.update({"currency_code": costCurrencyReply.value.value.value.rsplit(", ")[1] }) -%}
+    {%- endif -%}
+    {%- if costDescriptionReply -%}
+      {%- do oneCost.update({"description": costDescriptionReply|dot + " " + costAllocation|join("") }) -%}
+    {%- endif -%}
+
+    {%- do cost.append(oneCost) -%}
+
+  {%- endfor -%}
+{%- endfor -%}
+
 {%- set ethicalIssuesDescription = ethicalIssuesDescriptions|join(" ") -%}
 {#- DMP internal object -#}
 {%- set dmp = {
@@ -445,7 +506,8 @@
   "ethical_issues_exist": ethicalIssuesExist|default(""),
   "dataset": datasets|default([]),
   "created": ctx.createdAt|datetime_format("%Y-%m-%dT%H:%M:%SZ"),
-  "modified": ctx.updatedAt|datetime_format("%Y-%m-%dT%H:%M:%SZ")
+  "modified": ctx.updatedAt|datetime_format("%Y-%m-%dT%H:%M:%SZ"),
+  "cost": cost
 } -%}
 {%- if contacts|length > 0 -%}
   {%- do dmp.update({"contact": {

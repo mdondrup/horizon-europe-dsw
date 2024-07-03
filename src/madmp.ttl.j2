@@ -130,7 +130,24 @@
   {%- endfor -%}
 {%- endif %}
   dct:created "{{ dmp["created"] }}"^^xsd:dateTime ;
-  dct:modified "{{ dmp["modified"] }}"^^xsd:dateTime .
+  dct:modified "{{ dmp["modified"] }}"^^xsd:dateTime ;
+{%- if "cost" in dmp.keys() and dmp["cost"]|length > 0 %}
+  dcso:hasCost
+  {%- for cost in dmp["cost"] %}
+    [ a dsco:Cost ;
+      {%- if "value" in cost.keys() %}
+      dcso:value {{ cost["value"]|tojson }} ;
+      {%- endif -%}
+      {%- if "currency_code" in cost.keys() %}
+      dcso:currency_code {{ cost["currency_code"]|tojson  }} ;
+      {%- endif -%}
+      {%- if "description" in cost.keys() %}
+      dct:description {{ cost["description"]|tojson }} ;
+      {%- endif %}
+      dct:title {{ cost["title"]|tojson }} .
+    ] {{ "." if loop.last else "," }}
+  {%- endfor -%}
+{%- endif %}
 
 # DMP identifier
 <{{ uri_dmpid }}> a dcso:DMPId ;

@@ -72,7 +72,8 @@
 #####################################################################
 # DMP identifier
 #####################################################################
-<{{ uri_dmpid }}> a dcso:DMPId ;
+<{{ uri_dmpid }}> 
+  a dcso:DMPId ;
   dcso:identifier_type {{ dmp["dmp_id"]["type"]|tojson }} ;
   dct:identifier {{ dmp["dmp_id"]["identifier"]|tojson }} .
 

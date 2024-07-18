@@ -129,12 +129,10 @@
     ] {{ ";" if loop.last else "," }}
   {%- endfor -%}
 {%- endif %}
-  dct:created "{{ dmp["created"] }}"^^xsd:dateTime ;
-  dct:modified "{{ dmp["modified"] }}"^^xsd:dateTime ;
 {%- if "cost" in dmp.keys() and dmp["cost"]|length > 0 %}
   dcso:hasCost
   {%- for cost in dmp["cost"] %}
-    [ a dsco:Cost ;
+    [ a dcso:Cost ;
       {%- if "value" in cost.keys() %}
       dcso:value {{ cost["value"]|tojson }} ;
       {%- endif -%}
@@ -144,13 +142,16 @@
       {%- if "description" in cost.keys() %}
       dct:description {{ cost["description"]|tojson }} ;
       {%- endif %}
-      dct:title {{ cost["title"]|tojson }} .
-    ] {{ "." if loop.last else "," }}
+      dct:title {{ cost["title"]|tojson }} ;
+    ] {{ ";" if loop.last else "," }}
   {%- endfor -%}
 {%- endif %}
+  dct:created "{{ dmp["created"] }}"^^xsd:dateTime ;
+  dct:modified "{{ dmp["modified"] }}"^^xsd:dateTime .
 
 # DMP identifier
-<{{ uri_dmpid }}> a dcso:DMPId ;
+<{{ uri_dmpid }}> 
+  a dcso:DMPId ;
   dcso:identifier_type {{ dmp["dmp_id"]["type"]|tojson }} ;
   dct:identifier {{ dmp["dmp_id"]["identifier"]|tojson }} .
 

@@ -470,9 +470,9 @@
       {%- if costAllocations|length > 2 -%}
         {%- do costAllocation.append(costAllocations[0:-1]|join(", ") ~ ", and "~  costAllocations[-1] ~ " of data.") -%}
       {%- elif costAllocations|length == 2 -%}
-        {%- do costAllocation.append( costAllocations[0]~" and" ~costAllocations[1]~ " of data.")-%}
+        {%- do costAllocation.append( costAllocations[0]~" and " ~costAllocations[1]~ " of data.")-%}
       {%- else -%}
-        {%- do costAllocation.append( costAllocations[0]~ "of data.") -%}
+        {%- do costAllocation.append( costAllocations[0]~ " of data.") -%}
       {%- endif %}
     {%- endif -%}
 
@@ -482,10 +482,10 @@
     {%- if costAmount -%}
       {%- do oneCost.update({"value": costAmount|int}) -%}
     {%- endif -%}
-    {%- if costCurrencyReply -%}
+    {%- if costCurrencyReply and costCurrencyReply.value.value.type == "IntegrationType" -%}
       {%- do oneCost.update({"currency_code": costCurrencyReply.value.value.value.rsplit(", ")[1] }) -%}
     {%- endif -%}
-    {%- if costDescriptionReply -%}
+    {%- if costDescriptionReply or costAllocation -%}
       {%- do oneCost.update({"description": costDescriptionReply|dot + " " + costAllocation|join("") }) -%}
     {%- endif -%}
 

@@ -2,12 +2,12 @@
 {%- import "src/_uuids.j2" as uuids with context -%}
 {%- import "src/globals.j2" as globals with context -%}
 {%- set km = ctx.knowledgeModel -%}
-{%- set repliesMap = ctx.questionnaireReplies -%}
+{%- set repliesMap = ctx.questionnaire.replies -%}
 {#- Basic DMP metadata -#}
 {#- maDMP variables -#}
-{%- set madmpDescription = "This maDMP has been created using " ~ globals.fullName ~ " (" ~ globals.link ~ ") and is based on knowledge model " ~ ctx.package.name ~ " (" ~ [ctx.package.organizationId, ctx.package.kmId, ctx.package.version]|join(":") ~ "). The questionnaire used for this DMP is identified by UUID \"" ~ ctx.questionnaireUuid ~ "\" within " ~ ctx.config.clientUrl ~ " " ~ globals.name ~ " instance." -%}
+{%- set madmpDescription = "This maDMP has been created using " ~ globals.fullName ~ " (" ~ globals.link ~ ") and is based on knowledge model " ~ ctx.package.name ~ " (" ~ [ctx.package.organizationId, ctx.package.kmId, ctx.package.version]|join(":") ~ "). The questionnaire used for this DMP is identified by UUID \"" ~ ctx.questionnaire.uuid ~ "\" within " ~ ctx.config.clientUrl ~ " " ~ globals.name ~ " instance." -%}
 {%- set madmpDmpId = {
-  "identifier": ctx.config.clientUrl ~ "/projects/" ~ ctx.questionnaireUuid,
+  "identifier": ctx.config.clientUrl ~ "/projects/" ~ ctx.questionnaire.uuid,
   "type": "url"
 }
 -%}
@@ -497,7 +497,7 @@
 {%- set ethicalIssuesDescription = ethicalIssuesDescriptions|join(" ") -%}
 {#- DMP internal object -#}
 {%- set dmp = {
-  "title": ctx.questionnaireName|default(""),
+  "title": ctx.questionnaire.name|default(""),
   "description": madmpDescription|default(""),
   "language": "eng",
   "dmp_id": madmpDmpId|default(""),
@@ -505,8 +505,8 @@
   "project": projects|default([]),
   "ethical_issues_exist": ethicalIssuesExist|default(""),
   "dataset": datasets|default([]),
-  "created": ctx.createdAt|datetime_format("%Y-%m-%dT%H:%M:%SZ"),
-  "modified": ctx.updatedAt|datetime_format("%Y-%m-%dT%H:%M:%SZ"),
+  "created": ctx.questionnaire.createdAt|datetime_format("%Y-%m-%dT%H:%M:%SZ"),
+  "modified": ctx.questionnaire.updatedAt|datetime_format("%Y-%m-%dT%H:%M:%SZ"),
   "cost": cost
 } -%}
 {%- if contacts|length > 0 -%}

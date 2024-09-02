@@ -28,6 +28,10 @@ This document template for DSW is available as open-source via GitHub Repository
 
 ## Changelog
 
+### 1.18.0
+
+- Adjusted to template metamodel version 14 (released in DSW 4.10.0)
+
 ### 1.17.1
 
 - Fix costs in project: typo in dcso prefix and endings of elements

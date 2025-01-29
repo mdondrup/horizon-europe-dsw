@@ -52,7 +52,9 @@
       foaf:mbox {{ contributor["mbox"]|tojson }} ;
       {%- endif %}
       {%- if contributor["role"]|length > 0 %}
-      dcso:role {{ contributor["role"][0]|tojson }} ;
+      dcso:role {{ contributor["role"]|map('tojson')|join(', ') }} ;
+      {%- endif %}
+      {%- if "name" in contributor.keys() %}
       {%- endif %}
       foaf:name {{ contributor["name"]|tojson }} ;
     ] {{ ";" if loop.last else "," }}

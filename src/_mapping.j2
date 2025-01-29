@@ -30,6 +30,7 @@
   uuids.contributorRoleSponsorAUuid: "sponsor",
   uuids.contributorRoleSupervisorAUuid: "supervisor",
   uuids.contributorRoleWorkPackageLeaderAUuid: "work package leader",
+  uuids.contributorRoleWorkCreatorOfDMPAUuid: "creator of DMP",
   uuids.contributorRoleOtherAUuid: "other",
 } -%}
 {%- set contributorsPath = [uuids.adminDetailsCUuid, uuids.contributorsQUuid]|reply_path -%}
@@ -41,7 +42,6 @@
   {%- set contributorEmail = repliesMap[[contributorsPath, i, uuids.contributorEmailQUuid]|reply_path]|reply_str_value -%}
   {%- set contributorOrcid = repliesMap[[contributorsPath, i, uuids.contributorOrcidQUuid]|reply_path]|reply_str_value -%}
   {%- set contributorRoleChoices = repliesMap[[contributorsPath, i, uuids.contributorRoleQUuid]|reply_path]|reply_items -%}
-  {#- Currently, only one role is possible -#}
   {%- set contributorRoles = [] -%}
   {%- for role in contributorRoleChoices -%}
     {%- do contributorRoles.append(contributorsMap.get(role, "other")) -%}

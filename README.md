@@ -28,6 +28,10 @@ This document template for DSW is available as open-source via GitHub Repository
 
 ## Changelog
 
+### 1.21.0
+
+- Improved Authors of the DMP
+
 ### 1.20.0
 
 - Adjusted to template metamodel version 16 (released in DSW 4.13.0)

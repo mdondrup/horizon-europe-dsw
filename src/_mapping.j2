@@ -40,20 +40,38 @@
 {%- for i in contributorsItems -%}
   {%- set contributorName = repliesMap[[contributorsPath, i, uuids.contributorNameQUuid]|reply_path]|reply_str_value -%}
   {%- set contributorEmail = repliesMap[[contributorsPath, i, uuids.contributorEmailQUuid]|reply_path]|reply_str_value -%}
-  {%- set contributorOrcid = repliesMap[[contributorsPath, i, uuids.contributorOrcidQUuid]|reply_path]|reply_str_value -%}
+  {%- set contributorOrcidReply = repliesMap[[contributorsPath, i, uuids.contributorOrcidQUuid]|reply_path] -%}
   {%- set contributorRoleChoices = repliesMap[[contributorsPath, i, uuids.contributorRoleQUuid]|reply_path]|reply_items -%}
   {%- set contributorRoles = [] -%}
   {%- for role in contributorRoleChoices -%}
     {%- do contributorRoles.append(contributorsMap.get(role, "other")) -%}
   {%- endfor -%}
-  {%- set contributor = {
+  {%- if not contributorOrcidReply -%}
+      {%- set contributor = {
+    "contributor_id": {
+      "identifier": i,
+      "type": "other"
+    }
+    } -%}
+  {%- elif contributorOrcidReply.value.value.type == "IntegrationType"-%}
+    {%- set contributorOrcid = contributorOrcidReply.value.value.id -%}
+      {%- set contributor = {
     "contributor_id": {
       "identifier": contributorOrcid|default(""),
       "type": "orcid"
-    },
-    "name": contributorName|default(""),
-    "role": contributorRoles|sort
+    }
+    } -%}
+  {%- else -%}
+    {%- set contributorOrcid = contributorOrcidReply.value.value.value -%}
+      {%- set contributor = {
+    "contributor_id": {
+      "identifier": contributorOrcid|default(""),
+      "type": "orcid"
+    }
   } -%}
+  {%- endif -%}
+  {%- do contributor.update({"name": contributorName|default("")}) -%}
+  {%- do contributor.update({"role": contributorRoles|sort}) -%}
   {%- if contributorEmail != "" -%}
     {%- do contributor.update({"mbox": contributorEmail}) -%}
   {%- endif -%}
@@ -509,6 +527,7 @@
   "modified": ctx.questionnaire.updatedAt|datetime_format("%Y-%m-%dT%H:%M:%SZ"),
   "cost": cost
 } -%}
+{#- Only one Contact Person is permitted -#}
 {%- if contacts|length > 0 -%}
   {%- do dmp.update({"contact": {
     "contact_id": contacts[0]["contributor_id"],

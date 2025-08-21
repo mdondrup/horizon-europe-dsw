@@ -54,7 +54,7 @@
       "type": "other"
     }
     } -%}
-  {%- elif contributorOrcidReply.value.value.type == "IntegrationType"-%}
+  {%- elif contributorOrcidReply.value.value.type == "IntegrationLegacyType"-%}
     {%- set contributorOrcid = contributorOrcidReply.value.value.id -%}
       {%- set contributor = {
     "contributor_id": {
@@ -100,7 +100,7 @@
   {%- for j in projectFundingItems -%}
     {%- set funderReply = repliesMap[[projectFundingPath, j, uuids.projectFundingFunderQUuid]|reply_path] -%}
     {%- set funderUrl = "" -%}
-    {%- if funderReply and funderReply.value.value.type == "IntegrationType" and funderReply.value.value.id -%}
+    {%- if funderReply and funderReply.value.value.type == "IntegrationLegacyType" and funderReply.value.value.id -%}
       {%- set funderUrl = funderReply.value.value.id -%}
     {%- elif funderReply -%}
       {%- set funderUrl = funderReply.value.value.value -%}
@@ -181,7 +181,7 @@
     {%- set nrefDataEthicalAppAUuid = repliesMap[nrefDataEthicalAppPath]|reply_str_value -%}
 
     {%- set name = "(unknown name)" -%}
-    {%- if nrefDataNameReply and nrefDataNameReply.value.value.type == "IntegrationType" and nrefDataNameReply.value.value.id -%}
+    {%- if nrefDataNameReply and nrefDataNameReply.value.value.type == "IntegrationLegacyType" and nrefDataNameReply.value.value.id -%}
       {%- set question = km.entities.questions[uuids.nrefDataNameQUuid] -%}
       {%- set integration = km.entities.integrations[question.integrationUuid] -%}
       {%- set integrationLink = integration.itemUrl|replace("${id}", nrefDataNameReply.value.value.id) -%}
@@ -524,7 +524,7 @@
     {%- if costAmount -%}
       {%- do oneCost.update({"value": costAmount|int}) -%}
     {%- endif -%}
-    {%- if costCurrencyReply and costCurrencyReply.value.value.type == "IntegrationType" -%}
+    {%- if costCurrencyReply and costCurrencyReply.value.value.type == "IntegrationLegacyType" -%}
       {%- do oneCost.update({"currency_code": costCurrencyReply.value.value.value.rsplit(", ")[1] }) -%}
     {%- endif -%}
     {%- if costDescriptionReply or costAllocation -%}

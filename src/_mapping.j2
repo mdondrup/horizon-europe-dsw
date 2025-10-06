@@ -54,22 +54,14 @@
       "type": "other"
     }
     } -%}
-  {%- elif contributorOrcidReply.value.value.type == "IntegrationLegacyType"-%}
-    {%- set contributorOrcid = contributorOrcidReply.value.value.id -%}
+  {%- else -%}
+    {%- set contributorOrcid = macros.integrationOrcid(contributorOrcidReply) -%}
       {%- set contributor = {
     "contributor_id": {
       "identifier": contributorOrcid|default(""),
       "type": "orcid"
     }
     } -%}
-  {%- else -%}
-    {%- set contributorOrcid = contributorOrcidReply.value.value.value -%}
-      {%- set contributor = {
-    "contributor_id": {
-      "identifier": contributorOrcid|default(""),
-      "type": "orcid"
-    }
-  } -%}
   {%- endif -%}
   {%- do contributor.update({"name": contributorName|default("")}) -%}
   {%- do contributor.update({"role": contributorRoles|sort}) -%}
@@ -100,10 +92,8 @@
   {%- for j in projectFundingItems -%}
     {%- set funderReply = repliesMap[[projectFundingPath, j, uuids.projectFundingFunderQUuid]|reply_path] -%}
     {%- set funderUrl = "" -%}
-    {%- if funderReply and funderReply.value.value.type == "IntegrationLegacyType" and funderReply.value.value.id -%}
-      {%- set funderUrl = funderReply.value.value.id -%}
-    {%- elif funderReply -%}
-      {%- set funderUrl = funderReply.value.value.value -%}
+    {%- if funderReply -%}
+      {%- set funderUrl = macros.integrationCrossref(funderReply) -%}
     {%- endif -%}
     {%- set grantNumber = repliesMap[[projectFundingPath, j, uuids.projectFundingGrantNumberQUuid]|reply_path]|reply_str_value -%}
     {%- set fundingStatusAUuid = repliesMap[[projectFundingPath, j, uuids.projectFundingStatusQUuid]|reply_path]|reply_str_value -%}
@@ -181,13 +171,8 @@
     {%- set nrefDataEthicalAppAUuid = repliesMap[nrefDataEthicalAppPath]|reply_str_value -%}
 
     {%- set name = "(unknown name)" -%}
-    {%- if nrefDataNameReply and nrefDataNameReply.value.value.type == "IntegrationLegacyType" and nrefDataNameReply.value.value.id -%}
-      {%- set question = km.entities.questions[uuids.nrefDataNameQUuid] -%}
-      {%- set integration = km.entities.integrations[question.integrationUuid] -%}
-      {%- set integrationLink = integration.itemUrl|replace("${id}", nrefDataNameReply.value.value.id) -%}
-      {%- set name = "\"" ~ macros.integrationValue(nrefDataNameReply) ~ "\" [" ~ integrationLink ~ "]" -%}
-    {%- elif nrefDataNameReply %}
-      {%- set name = "\"" ~ nrefDataNameReply.value.value.value ~ "\"" -%}
+    {%- if nrefDataNameReply -%}
+      {%- set name = macros.integrationFairSharing(nrefDataNameReply) -%}
     {%- endif -%}
     {%- if nrefDataWhere -%}
       {%- set name = name ~ " (" ~ nrefDataWhere ~ ")" -%}
@@ -524,8 +509,9 @@
     {%- if costAmount -%}
       {%- do oneCost.update({"value": costAmount|int}) -%}
     {%- endif -%}
-    {%- if costCurrencyReply and costCurrencyReply.value.value.type == "IntegrationLegacyType" -%}
-      {%- do oneCost.update({"currency_code": costCurrencyReply.value.value.value.rsplit(", ")[1] }) -%}
+    {%- set currencyCode = macros.integrationCurrency(costCurrencyReply) -%}
+    {%- if currencyCode -%}
+      {%- do oneCost.update({"currency_code": currencyCode }) -%}
     {%- endif -%}
     {%- if costDescriptionReply or costAllocation -%}
       {%- do oneCost.update({"description": costDescriptionReply|dot + " " + costAllocation|join("") }) -%}

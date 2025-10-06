@@ -1,3 +1,36 @@
+{%- macro integrationOrcid(reply) -%}
+  {%- if reply and reply.value.value.type == "IntegrationType" -%}
+    {{ reply.value.value.raw["orcid-id"] }}
+  {%- elif reply and reply.value.value.type == "PlainType" -%}
+   {{ reply.value.value.value }}
+  {%- endif -%}
+{%- endmacro -%}
+
+{%- macro integrationFairSharing(reply) -%}
+  {%- if reply and reply.value.value.type == "IntegrationType" -%}
+    {%- set replyObject = reply.value.value.raw -%}
+    "{{ replyObject.name }} (https://doi.org/{{ replyObject.doi }})"
+  {%- elif reply and reply.value.value.type == "PlainType" -%}
+    "{{ reply.value.value.value }}"
+  {%- endif -%}
+{%- endmacro -%}
+
+{%- macro integrationCrossref(reply) -%}
+  {%- if reply and reply.value.value.type == "IntegrationType" -%}
+    {%- set replyObject = reply.value.value.raw -%}
+    {{ replyObject.uri }}
+  {%- elif reply and reply.value.value.type == "PlainType" -%}
+    {{ reply.value.value.value }}
+  {%- endif -%}
+{%- endmacro -%}
+
+{%- macro integrationCurrency(reply) -%}
+  {%- if reply and reply.value.value.type == "IntegrationType" -%}
+    {%- set replyObject = reply.value.value.raw -%}
+    {{replyObject.code}}
+  {%- endif -%}
+{%- endmacro -%}
+
 {%- macro integrationValue(reply) -%}
   {%- if reply and reply.value.value.type == "IntegrationLegacyType" -%}
     {{ reply.value.value.value.rsplit(" ![]")[0] }}

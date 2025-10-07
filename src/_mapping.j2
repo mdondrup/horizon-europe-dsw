@@ -278,7 +278,7 @@
   {%- set legalReasonsAUuid = repliesMap[legalReasonsPath]|reply_str_value -%}
   {%- if legalReasonsAUuid == uuids.legalReasonsYesAUuid -%}
     {%- do ethicalIssues.append("legal-reasons") -%}
-    {%- do ethicalIssuesDescriptions.append("There are privacy reasons so our data can not be open.") -%}
+    {%- do ethicalIssuesDescriptions.append("There are privacy reasons so our data cannot be open.") -%}
 
     {%- set legalReasonsYesPath = [uuids.givingAccessCUuid, uuids.legalReasonsQUuid, uuids.legalReasonsYesAUuid]|reply_path -%}
     {%- set privacyRestrictionsAUuid = repliesMap[[legalReasonsYesPath, uuids.privacyRestrictionsQUuid]|reply_path]|reply_str_value -%}

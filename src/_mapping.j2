@@ -163,7 +163,7 @@
     {%- set nrefDataPrefix = [nrefDataPath, i]|reply_path -%}
     {%- set nrefDataUsedPrefix = [nrefDataPrefix, uuids.nrefDataUseQUuid, uuids.nrefDataUseYesAUuid]|reply_path -%}
     {%- set nrefDataNamePath = [nrefDataPrefix, uuids.nrefDataNameQUuid]|reply_path -%}
-    {%- set nrefDataNameReply = repliesMap[nrefDataNamePath] -%}
+    {%- set nrefDataNameReply = repliesMap[nrefDataNamePath]|reply_str_value  -%}
     {%- set nrefDataWhere = repliesMap[[nrefDataPrefix, uuids.nrefDataWhereQUuid]|reply_path]|reply_str_value -%}
     {%- set nrefDataPersonalPath = [nrefDataUsedPrefix, uuids.nrefDataPersonalQUuid]|reply_path -%}
     {%- set nrefDataPersonalAUuid = repliesMap[nrefDataPersonalPath]|reply_str_value -%}
@@ -172,7 +172,7 @@
 
     {%- set name = "(unknown name)" -%}
     {%- if nrefDataNameReply -%}
-      {%- set name = macros.integrationFairSharing(nrefDataNameReply) -%}
+      {%- set name = nrefDataNameReply -%}
     {%- endif -%}
     {%- if nrefDataWhere -%}
       {%- set name = name ~ " (" ~ nrefDataWhere ~ ")" -%}

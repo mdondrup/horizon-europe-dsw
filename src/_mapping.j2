@@ -1,12 +1,12 @@
 {#- This file contains the mapping with dsw:root KM -#}
 {% import "src/macros.j2" as macros with context %}
 {%- import "src/_uuids.j2" as uuids with context -%}
-{%- import "src/globals.j2" as globals with context -%}
+{%- set dc = ctx|to_context_obj -%}
 {%- set km = ctx.knowledgeModel -%}
 {%- set repliesMap = ctx.questionnaire.replies -%}
 {#- Basic DMP metadata -#}
 {#- maDMP variables -#}
-{%- set madmpDescription = "This maDMP has been created using " ~ globals.fullName ~ " (" ~ globals.link ~ ") and is based on knowledge model " ~ ctx.package.name ~ " (" ~ [ctx.package.organizationId, ctx.package.kmId, ctx.package.version]|join(":") ~ "). The questionnaire used for this DMP is identified by UUID \"" ~ ctx.questionnaire.uuid ~ "\" within " ~ ctx.config.clientUrl ~ " " ~ globals.name ~ " instance." -%}
+{%- set madmpDescription = "This maDMP has been created using " ~ dc.config.service_name ~ " (" ~ dc.config.service_domain_name ~ ") and is based on knowledge model " ~ ctx.package.name ~ " (" ~ [ctx.package.organizationId, ctx.package.kmId, ctx.package.version]|join(":") ~ "). The questionnaire used for this DMP is identified by UUID \"" ~ ctx.questionnaire.uuid ~ "\" within " ~ ctx.config.clientUrl ~ " " ~ dc.config.service_name_short ~ " instance." -%}
 {%- set madmpDmpId = {
   "identifier": ctx.config.clientUrl ~ "/projects/" ~ ctx.questionnaire.uuid,
   "type": "url"

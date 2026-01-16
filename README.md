@@ -28,6 +28,10 @@ This document template for DSW is available as open-source via GitHub Repository
 
 ## Changelog
 
+### 1.27.1
+
+- Adjusted template metamodel version to 17.1 (released in DSW 4.26.0)
+
 ### 1.27.0
 
 - Updated reused dataset name to use reply string value instead FAIRsharing integration

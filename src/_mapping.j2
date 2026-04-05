@@ -3,12 +3,12 @@
 {%- import "src/_uuids.j2" as uuids with context -%}
 {%- set dc = ctx|to_context_obj -%}
 {%- set km = ctx.knowledgeModel -%}
-{%- set repliesMap = ctx.questionnaire.replies -%}
+{%- set repliesMap = ctx.project.replies -%}
 {#- Basic DMP metadata -#}
 {#- maDMP variables -#}
-{%- set madmpDescription = "This maDMP has been created using " ~ dc.config.service_name ~ " (" ~ dc.config.service_domain_name ~ ") and is based on knowledge model " ~ ctx.package.name ~ " (" ~ [ctx.package.organizationId, ctx.package.kmId, ctx.package.version]|join(":") ~ "). The questionnaire used for this DMP is identified by UUID \"" ~ ctx.questionnaire.uuid ~ "\" within " ~ ctx.config.clientUrl ~ " " ~ dc.config.service_name_short ~ " instance." -%}
+{%- set madmpDescription = "This maDMP has been created using " ~ dc.config.service_name ~ " (" ~ dc.config.service_domain_name ~ ") and is based on knowledge model " ~ dc.pkg.name ~ " (" ~ [dc.pkg.organization_id, dc.pkg.km_id, dc.pkg.version]|join(":") ~ "). The questionnaire used for this DMP is identified by UUID \"" ~ ctx.project.uuid ~ "\" within " ~ ctx.config.clientUrl ~ " " ~ dc.config.service_name_short ~ " instance." -%}
 {%- set madmpDmpId = {
-  "identifier": ctx.config.clientUrl ~ "/projects/" ~ ctx.questionnaire.uuid,
+  "identifier": ctx.config.clientUrl ~ "/projects/" ~ ctx.project.uuid,
   "type": "url"
 }
 -%}
@@ -525,7 +525,7 @@
 {%- set ethicalIssuesDescription = ethicalIssuesDescriptions|join(" ") -%}
 {#- DMP internal object -#}
 {%- set dmp = {
-  "title": ctx.questionnaire.name|default(""),
+  "title": ctx.project.name|default(""),
   "description": madmpDescription|default(""),
   "language": "eng",
   "dmp_id": madmpDmpId|default(""),
@@ -533,8 +533,8 @@
   "project": projects|default([]),
   "ethical_issues_exist": ethicalIssuesExist|default(""),
   "dataset": datasets|default([]),
-  "created": ctx.questionnaire.createdAt|datetime_format("%Y-%m-%dT%H:%M:%SZ"),
-  "modified": ctx.questionnaire.updatedAt|datetime_format("%Y-%m-%dT%H:%M:%SZ"),
+  "created": ctx.project.createdAt|datetime_format("%Y-%m-%dT%H:%M:%SZ"),
+  "modified": ctx.project.updatedAt|datetime_format("%Y-%m-%dT%H:%M:%SZ"),
   "cost": cost
 } -%}
 {#- Only one Contact Person is permitted -#}

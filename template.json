@@ -5,7 +5,7 @@
   "name": "maDMP (RDA DMP Common Standard)",
   "description": "Machine-actionable DMP according to RDA Common Standard",
   "license": "Apache-2.0",
-  "metamodelVersion": "18.0",
+  "metamodelVersion": "20",
   "allowedPackages": [
     {
       "orgId": "dsw",
@@ -17,6 +17,12 @@
       "orgId": "dsw",
       "kmId": "lifesciences",
       "minVersion": "2.7.0",
+      "maxVersion": null
+    },
+    {
+      "orgId": "research.data.no",
+      "kmId": "norway-generic",
+      "minVersion": "1.2.0",
       "maxVersion": null
     }
   ],

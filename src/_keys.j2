@@ -1,0 +1,68 @@
+{#- 
+  Parent-scoped json.key lookup builder.
+  
+  Builds a nested dict structure: {parentUuid: {json.key: childUuid}}
+  This avoids collisions by scoping keys to their parent entity.
+  
+  Also provides a key() resolver macro that:
+  - Takes (parentUuid, keyName) and returns the childUuid
+  - Raises a clear error if the key is missing or ambiguous
+-#}
+
+{%- set km = ctx.knowledgeModel -%}
+
+{#- Collision detection helper: fail if a json.key is annotated on multiple siblings -#}
+{%- macro check_no_collisions(parentUuid, keyName, uuids) -%}
+  {%- if uuids|length > 1 -%}
+    {%- set err = "FATAL: json.key '" ~ keyName ~ "' is ambiguous within parent " ~ parentUuid ~ " (found " ~ uuids|length ~ " matching siblings: " ~ uuids|join(", ") ~ "). This should not happen with the updated workflow. Check the KM annotations." -%}
+    {{ undefined_variable_to_abort(err) }}
+  {%- endif -%}
+{%- endmacro -%}
+
+{#- Build the nested lookup: {parentUuid: {keyName: childUuid}} -#}
+{%- set keys_by_parent = {} -%}
+
+{#- Extract json.key annotations from all entity types -#}
+{%- for entity_kind in ["chapters", "questions", "answers", "choices", "integrations", "tags", "metrics", "phases", "references", "experts"] -%}
+  {%- for uuid, entity in (km[entity_kind]|default({}, true)).items() -%}
+    {%- for ann in entity.annotations|default([]) -%}
+      {%- if ann.key == "json.key" -%}
+        {%- set parent_uuid = entity.parentUuid|default(None) -%}
+        {%- if parent_uuid -%}
+          {%- if parent_uuid not in keys_by_parent -%}
+            {%- do keys_by_parent.update({parent_uuid: {}}) -%}
+          {%- endif -%}
+          {%- set key_name = ann.value -%}
+          {%- set existing = keys_by_parent[parent_uuid].get(key_name) -%}
+          {%- if existing -%}
+            {#- Collision: same key already set under this parent -#}
+            {%- set err_msg = "FATAL: Duplicate json.key '" ~ key_name ~ "' under parent " ~ parent_uuid ~ ": both " ~ existing ~ " and " ~ uuid ~ " have the same key. Check the KM annotations." -%}
+            {{ undefined_variable_to_abort_message(err_msg) }}
+          {%- else -%}
+            {%- do keys_by_parent[parent_uuid].update({key_name: uuid}) -%}
+          {%- endif -%}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endfor -%}
+{%- endfor -%}
+
+{#- Resolver: key(parentUuid, keyName) -> childUuid, with clear error on miss -#}
+{%- macro key(parentUuid, keyName) -%}
+  {%- set parent_dict = keys_by_parent.get(parentUuid) -%}
+  {%- if not parent_dict -%}
+    {# No keys at all under this parent #}
+    {{ undefined_variable_key_not_found(keyName ~ " (parent " ~ parentUuid ~ " has no json.key annotations)") }}
+  {%- endif -%}
+  {%- set result = parent_dict.get(keyName) -%}
+  {%- if not result -%}
+    {# Key not found under this parent; show available keys for debugging -#}
+    {%- set available = parent_dict.keys()|list|join(", ") -%}
+    {{ undefined_variable_key_missing(keyName ~ " under parent " ~ parentUuid ~ ". Available keys: [" ~ available ~ "]") }}
+  {%- else -%}
+    {{ result }}
+  {%- endif -%}
+{%- endmacro -%}
+
+{#- Debug export: expose the full nested structure -#}
+{%- set keys = keys_by_parent -%}

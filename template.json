@@ -5,7 +5,7 @@
   "name": "maDMP (RDA DMP Common Standard)",
   "description": "Machine-actionable DMP according to RDA Common Standard",
   "license": "Apache-2.0",
-  "metamodelVersion": "20",
+  "metamodelVersion": "18",
   "allowedPackages": [
     {
       "orgId": "dsw",

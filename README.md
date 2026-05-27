@@ -41,7 +41,7 @@ For the work captured in this thread, the following AI tooling was used:
 
 ## Changelog
 
-### Unreleased
+### 1.29.0
 
 - Reworked the maDMP JSON mapping to use annotation-based `extract_replies` navigation instead of UUID-based lookups
 - Added compatibility for `research.data.no:norway-generic:1.2.0`

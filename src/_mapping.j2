@@ -41,19 +41,20 @@
 
 {#- ---------------- Contributors & contact ---------------- -#}
 {#-
-  KM choice json.value -> maDMP role string (lowercase free-text per RDA examples).
+  KM choice json.value -> maDMP role string. maDMP 1.2 recommends DataCite
+  contributorType values (https://datacite-metadata-schema.readthedocs.io/).
 -#}
 {%- set roleLabelMap = {
-  "contactPerson":     "contact person",
-  "projectLeader":     "project leader",
-  "supervisor":        "supervisor",
-  "dataCollector":     "data collector",
-  "dataCurator":       "data curator",
-  "dataManagerData":   "data manager",
-  "projectManager":    "project manager",
-  "projectMember":     "project member",
-  "workPackageLeader": "work package leader",
-  "other":             "other",
+  "contactPerson":     "ContactPerson",
+  "projectLeader":     "ProjectLeader",
+  "supervisor":        "Supervisor",
+  "dataCollector":     "DataCollector",
+  "dataCurator":       "DataCurator",
+  "dataManagerData":   "DataManager",
+  "projectManager":    "ProjectManager",
+  "projectMember":     "ProjectMember",
+  "workPackageLeader": "WorkPackageLeader",
+  "other":             "Other",
 } -%}
 
 {%- set contributors = [] -%}
@@ -67,6 +68,22 @@
   {%- for rv in roleValues -%}
     {%- do roles.append(roleLabelMap.get(rv, rv)) -%}
   {%- endfor -%}
+
+  {#- affiliation(s): ROR integration payload -> Affiliation (display name + ROR id).
+      maDMP 1.2 Affiliation requires BOTH name and affiliation_id, so only emit when
+      a ror_display name is present. -#}
+  {%- set affiliations = [] -%}
+  {%- if c.affiliation and c.affiliation._raw and c.affiliation._raw.id -%}
+    {%- set aff = c.affiliation._raw -%}
+    {%- set ns = namespace(affName="") -%}
+    {%- for nm in (aff.names or []) -%}
+      {%- if "ror_display" in (nm.types or []) -%}{%- set ns.affName = nm.value -%}{%- endif -%}
+    {%- endfor -%}
+    {%- if ns.affName -%}
+      {%- do affiliations.append({"name": ns.affName,
+                                  "affiliation_id": {"identifier": aff.id, "type": "ror"}}) -%}
+    {%- endif -%}
+  {%- endif -%}
 
   {%- set contributorId = {} -%}
   {%- if c.orcid and c.orcid._raw and c.orcid._raw["orcid-id"] -%}
@@ -85,12 +102,30 @@
       "contributor_id": contributorId
     } -%}
     {%- if email -%}{%- do entry.update({"mbox": email}) -%}{%- endif -%}
+    {%- if affiliations|length > 0 -%}{%- do entry.update({"affiliation": affiliations}) -%}{%- endif -%}
     {%- do contributors.append(entry) -%}
     {%- if "contactPerson" in roleValues and email -%}
       {%- do contacts.append(entry) -%}
     {%- endif -%}
   {%- endif -%}
 {%- endfor -%}
+
+{#- contact is REQUIRED by maDMP 1.2. Fallback chain so the DMP stays valid:
+    (1) a contributor flagged as contact person (built above),
+    (2) the first contributor that has an e-mail address,
+    (3) the DSW project creator (ctx.project.createdBy). -#}
+{%- if contacts|length == 0 -%}
+  {%- for cand in contributors -%}
+    {%- if contacts|length == 0 and cand.mbox -%}{%- do contacts.append(cand) -%}{%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+{%- if contacts|length == 0 and ctx.project.createdBy and ctx.project.createdBy.email -%}
+  {%- set cb = ctx.project.createdBy -%}
+  {%- set fn = cb.firstName or "" -%}{%- set ln = cb.lastName or "" -%}
+  {%- set cbName = (fn ~ " " ~ ln)|trim or cb.email -%}
+  {%- do contacts.append({"name": cbName, "mbox": cb.email,
+        "contributor_id": {"identifier": cb.uuid, "type": "other"}}) -%}
+{%- endif -%}
 
 {#- ---------------- Project (single) & funding ---------------- -#}
 {%- set fundings = [] -%}
@@ -158,6 +193,13 @@
 {%- if legal.requiresEthicalApproval and legal.requiresEthicalApproval._value is sameas true -%}
   {%- do ethicalIssues.append("ethical-approval") -%}
   {%- do ethicalDesc.append("The project requires ethical pre-approval.") -%}
+  {%- for au in (legal.requiresEthicalApproval.authority or []) -%}
+    {%- set parts = [] -%}
+    {%- if au.inspectorateAuthority and au.inspectorateAuthority._value -%}{%- do parts.append(au.inspectorateAuthority._value) -%}{%- endif -%}
+    {%- if au.status and au.status._label -%}{%- do parts.append("status: " ~ au.status._label) -%}{%- endif -%}
+    {%- if au.caseNumber and au.caseNumber._value -%}{%- do parts.append("case no. " ~ au.caseNumber._value) -%}{%- endif -%}
+    {%- if parts|length > 0 -%}{%- do ethicalDesc.append("Approval authority: " ~ parts|join(", ") ~ ".") -%}{%- endif -%}
+  {%- endfor -%}
 {%- endif -%}
 
 {%- if legal.personalCollectedProcessed -%}
@@ -165,16 +207,35 @@
   {%- set pcpVal = pcp._value -%}
   {%- if pcpVal in ("yes", "uncertain") -%}
     {%- do ethicalIssues.append("personal-data") -%}
-    {%- if pcpVal == "yes" -%}
-      {%- do ethicalDesc.append("Personal data will be collected or processed.") -%}
-    {%- else -%}
-      {%- do ethicalDesc.append("It is uncertain whether personal data will be collected or processed.") -%}
-    {%- endif -%}
+    {#- The KM's single affirmative answer is "Yes (or uncertain)" (json.value "uncertain");
+        per request it is treated as an affirmative "yes". -#}
+    {%- do ethicalDesc.append("Personal data will be collected or processed.") -%}
     {%- if pcp.brieflyDescribePersonal and pcp.brieflyDescribePersonal._value -%}
       {%- do ethicalDesc.append("Personal data: " ~ pcp.brieflyDescribePersonal._value) -%}
     {%- endif -%}
     {%- if pcp.documentParticipantsInformation and pcp.documentParticipantsInformation._value -%}
       {%- do ethicalDesc.append("Participant information: " ~ pcp.documentParticipantsInformation._value) -%}
+    {%- endif -%}
+    {#- privacy considerations (composed from the personal-data branch) -#}
+    {%- set pc = pcp.privacyConsiderations -%}
+    {%- if pc -%}
+      {%- if pc.legalBasis and pc.legalBasis._label -%}
+        {%- do ethicalDesc.append("Legal basis for processing: " ~ pc.legalBasis._label ~ ".") -%}
+      {%- endif -%}
+      {%- if pc.dataControllers and pc.dataControllers._label -%}
+        {%- do ethicalDesc.append("Data controller(s): " ~ pc.dataControllers._label ~ ".") -%}
+      {%- endif -%}
+      {%- if pc.needDpia and pc.needDpia.dpiaDone and pc.needDpia.dpiaDone._label -%}
+        {%- do ethicalDesc.append("Data protection impact assessment carried out: " ~ pc.needDpia.dpiaDone._label ~ ".") -%}
+      {%- endif -%}
+      {%- if pc.safeguards and pc.safeguards.transferOutsideEu -%}
+        {%- if pc.safeguards.transferOutsideEu._label -%}
+          {%- do ethicalDesc.append("Transfer of personal data outside the EU/EEA: " ~ pc.safeguards.transferOutsideEu._label ~ ".") -%}
+        {%- endif -%}
+        {%- if pc.safeguards.transferOutsideEu.dataProtectionMeasures and pc.safeguards.transferOutsideEu.dataProtectionMeasures._value -%}
+          {%- do ethicalDesc.append("Data protection measures for transfer: " ~ pc.safeguards.transferOutsideEu.dataProtectionMeasures._value) -%}
+        {%- endif -%}
+      {%- endif -%}
     {%- endif -%}
   {%- endif -%}
 {%- endif -%}
@@ -218,6 +279,50 @@
 {#- Chapters that hold cross-referenced source lists (aliased for readability). -#}
 {%- set reusing = replies.reusingCollectingChapter -%}
 {%- set datadoc = replies.creatingData -%}
+
+{#- ---------------- rights (composed free text, project-level) ----------------
+     maDMP `rights` is a prose statement covering rights not handled by `license`.
+     The KM spreads this across several creatingData questions, so we compose a
+     paragraph from: rights holder (+ external-holder conditions) and use
+     restrictions (+ restriction categories). Applied to every dataset. -#}
+{%- set rightsParts = [] -%}
+{%- if datadoc and datadoc.collectedDataRights -%}
+  {%- set cdr = datadoc.collectedDataRights -%}
+  {%- do rightsParts.append("Rights holder: " ~ cdr._label ~ ".") -%}
+  {%- if cdr._value == "thereExternalRightsholder" and cdr.holdsRightsConditions and cdr.holdsRightsConditions._value -%}
+    {%- do rightsParts.append("Conditions set by the external rightsholder: " ~ cdr.holdsRightsConditions._value ~ ".") -%}
+  {%- endif -%}
+{%- endif -%}
+{%- if datadoc and datadoc.dataUseRestrictions -%}
+  {%- set dur = datadoc.dataUseRestrictions -%}
+  {%- do rightsParts.append("Use restrictions: " ~ dur._label ~ ".") -%}
+  {%- if dur.restrictions -%}
+    {%- set rlabels = dur.restrictions | map(attribute='_label') | list -%}
+    {%- if rlabels|length > 0 -%}
+      {%- do rightsParts.append("Restriction categories: " ~ rlabels|join(", ") ~ ".") -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endif -%}
+{%- set rightsStatement = rightsParts | join(" ") -%}
+
+{#- ---------------- deletion summary (composed free text, project-level) ----------------
+     From "List data that you have deleted or will delete" (listHaveDelete ->
+     specifyListDelete list items: brief description, reason, timepoint). Folded into
+     every dataset's preservation_statement so the preservation/retention story is complete. -#}
+{%- set deletionParts = [] -%}
+{%- if archiving.listHaveDelete and archiving.listHaveDelete._value == "certainDataWas" -%}
+  {%- for dl in (archiving.listHaveDelete.specifyListDelete or []) -%}
+    {%- set seg = [] -%}
+    {%- if dl.briefDescriptionSet and dl.briefDescriptionSet._value -%}{%- do seg.append(dl.briefDescriptionSet._value) -%}{%- endif -%}
+    {%- if dl.reasonsDeletion and dl.reasonsDeletion._value -%}{%- do seg.append("reason: " ~ dl.reasonsDeletion._value) -%}{%- endif -%}
+    {%- if dl.timepointDeletion and dl.timepointDeletion._value -%}{%- do seg.append("timepoint: " ~ dl.timepointDeletion._value) -%}{%- endif -%}
+    {%- if seg|length > 0 -%}{%- do deletionParts.append(seg|join(", ")) -%}{%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+{%- set deletionSummary = "" -%}
+{%- if deletionParts|length > 0 -%}
+  {%- set deletionSummary = "Data scheduled for deletion: " ~ deletionParts|join("; ") ~ "." -%}
+{%- endif -%}
 
 {%- set datasets = [] -%}
 {%- for ds in archiving.distributions -%}
@@ -274,43 +379,56 @@
                        reusingCollectingDataset2 -> datasets.integrityQualityMeasures (free text; list under hasNonMeasuredData)
                        reusingCollectingDataset3 -> listPublishedArchived                         (no quality field => no QA)
   -#}
-  {%- set dsDescription = "" -%}
   {%- set qa = [] -%}
+  {%- set descParts = [] -%}
+  {%- set techResources = [] -%}
+  {%- set isReused = false -%}
   {%- if ds.description -%}
-    {%- if ds.description._value == "enterFreeText" and ds.description.briefDescriptionDataset -%}
-      {%- set dsDescription = ds.description.briefDescriptionDataset._value -%}
+    {%- if ds.description._value == "enterFreeText" and ds.description.briefDescriptionDataset and ds.description.briefDescriptionDataset._value -%}
+      {%- do descParts.append(ds.description.briefDescriptionDataset._value) -%}
 
     {%- elif ds.description._value == "selectInformationChapter" -%}
 
-      {#- (1) measured data -> dataMeasurementEquipment (quality: qualityProcessesApplied) -#}
+      {#- (1) measured data -> dataMeasurementEquipment (description, instruments, quality) -#}
       {%- if ds.description.reusingCollectingDataset and reusing and reusing.hasMeasuredData -%}
         {%- set ref = ds.description.reusingCollectingDataset._uuid -%}
         {%- set lst = reusing.hasMeasuredData.dataMeasurementEquipment -%}
         {%- set item = (lst | selectattr('_uuid', 'equalto', ref) | first | default(None))
              if (lst and ref) else None -%}
         {%- if item -%}
-          {%- if not dsDescription and item.applicableAdditionalDescription2 and item.applicableAdditionalDescription2._value -%}
-            {%- set dsDescription = item.applicableAdditionalDescription2._value -%}
-          {%- elif not dsDescription and item.dataset and item.dataset._value -%}
-            {%- set dsDescription = "Data originating from: " ~ item.dataset._value -%}
+          {%- if item.dataset and item.dataset._value -%}
+            {%- do descParts.append("Data originating from: " ~ item.dataset._value ~ ".") -%}
+          {%- endif -%}
+          {%- if item.applicableAdditionalDescription2 and item.applicableAdditionalDescription2._value -%}
+            {%- do descParts.append(item.applicableAdditionalDescription2._value) -%}
           {%- endif -%}
           {%- if item.qualityProcessesApplied -%}
             {%- for qp in item.qualityProcessesApplied -%}{%- do qa.append(qp._label) -%}{%- endfor -%}
           {%- endif -%}
+          {#- technical_resource: instruments used for this dataset (name + description) -#}
+          {%- for ins in (item.instruments or []) -%}
+            {%- if ins.name and ins.name._value -%}
+              {%- set tr = {"name": ins.name._value} -%}
+              {%- if ins.description and ins.description._value -%}{%- do tr.update({"description": ins.description._value}) -%}{%- endif -%}
+              {%- do techResources.append(tr) -%}
+            {%- endif -%}
+          {%- endfor -%}
         {%- endif -%}
       {%- endif -%}
 
-      {#- (2) reused datasets/records -> datasets (quality: integrityQualityMeasures) -#}
+      {#- (2) reused datasets/records -> datasets (description, quality); marks is_reused -#}
       {%- if ds.description.reusingCollectingDataset2 and reusing and reusing.hasNonMeasuredData -%}
         {%- set ref = ds.description.reusingCollectingDataset2._uuid -%}
         {%- set lst = reusing.hasNonMeasuredData.datasets -%}
         {%- set item = (lst | selectattr('_uuid', 'equalto', ref) | first | default(None))
              if (lst and ref) else None -%}
         {%- if item -%}
-          {%- if not dsDescription and item.collectionMethodology and item.collectionMethodology._value -%}
-            {%- set dsDescription = item.collectionMethodology._value -%}
-          {%- elif not dsDescription and item.dataset_1 and item.dataset_1._value -%}
-            {%- set dsDescription = "Data originating from: " ~ item.dataset_1._value -%}
+          {%- set isReused = true -%}
+          {%- if item.dataset_1 and item.dataset_1._value -%}
+            {%- do descParts.append("Data originating from: " ~ item.dataset_1._value ~ ".") -%}
+          {%- endif -%}
+          {%- if item.collectionMethodology and item.collectionMethodology._value -%}
+            {%- do descParts.append(item.collectionMethodology._value) -%}
           {%- endif -%}
           {%- if item.integrityQualityMeasures and item.integrityQualityMeasures._value -%}
             {%- do qa.append(item.integrityQualityMeasures._value) -%}
@@ -318,11 +436,10 @@
         {%- endif -%}
       {%- endif -%}
 
-      {#- (3) published/archived data -> listPublishedArchived: description only, no quality field.
-           TODO: confirm the parent option-question navigation for this list, then read
-           descriptionData for the dataset description. No QA is emitted for this branch. -#}
+      {#- (3) published/archived data -> listPublishedArchived: not yet navigated. -#}
     {%- endif -%}
   {%- endif -%}
+  {%- set dsDescription = descParts | join(" ") -%}
 
   {#- ---------- metadata (cross-ref to the selected metadata standard) ---------- -#}
   {%- set metadataStd = [] -%}
@@ -337,6 +454,7 @@
       {%- if stdItem and stdItem.standard and stdItem.standard._raw and stdItem.standard._raw.doi -%}
         {%- set std = stdItem.standard._raw -%}
         {%- set mEntry = {
+          "language": "eng",
           "metadata_standard_id": {"identifier": "https://doi.org/" ~ std.doi, "type": "url"}
         } -%}
         {%- set mDesc = stdItem.provideContextStandard._value
@@ -394,10 +512,12 @@
     {%- do distribution.update({"byte_size": (ds.sizeDataset._value | float * 1000000000) | int}) -%}
   {%- endif -%}
 
-  {#- download_url: the resolved PID landing/URL, when it is an http(s) URL.
-       (access_url is the more precise field for a pure landing page if preferred.) -#}
+  {#- download_url + access_url: the resolved PID landing/URL, when it is http(s).
+       In DCAT, access_url is the landing page and download_url the direct file;
+       the resolved PID serves as both here. -#}
   {%- if dsId.identifier and dsId.identifier.startswith("http") -%}
     {%- do distribution.update({"download_url": dsId.identifier}) -%}
+    {%- do distribution.update({"access_url": dsId.identifier}) -%}
   {%- endif -%}
 
   {#- host: built from whichever "Name of the archive" (nameArchive) branch is filled:
@@ -412,6 +532,7 @@
   {%- set na = ds.hasBeenArchived.nameArchive if ds.hasBeenArchived else None -%}
   {%- set repo = None -%}        {#- FAIRsharing raw payload, if any -#}
   {%- set hostTitle = None -%}   {#- plain archive name, manual branch -#}
+  {%- set chosen = None -%}      {#- linked identifyArchiveDepositing item, if selected via selectArchive -#}
   {%- if na -%}
     {%- if na._value == "selectAnswerIdentify" and na.selectArchive and na.selectArchive._uuid -%}
       {%- set archiveList = archiving.identifyArchiveDepositing -%}
@@ -431,10 +552,13 @@
   {%- if repo -%}
     {%- if repo.name -%}{%- do host.update({"title": repo.name}) -%}{%- endif -%}
     {%- if repo.homepage -%}{%- do host.update({"url": repo.homepage}) -%}{%- endif -%}
-    {%- if repo.url -%}{%- do host.update({"host_id": {"identifier": repo.url, "type": "url"}}) -%}{%- endif -%}
+    {%- if repo.url -%}{%- do host.update({"host_id": [{"identifier": repo.url, "type": "url"}]}) -%}{%- endif -%}
+    {%- if repo.description -%}{%- do host.update({"description": repo.description}) -%}{%- endif -%}
   {%- elif hostTitle -%}
     {%- do host.update({"title": hostTitle}) -%}
   {%- endif -%}
+  {#- pid_system: if the dataset PID is a DOI, the host issues DOIs. -#}
+  {%- if host and dsId.type == "doi" -%}{%- do host.update({"pid_system": ["doi"]}) -%}{%- endif -%}
   {%- if host -%}{%- do distribution.update({"host": host}) -%}{%- endif -%}
 
   {%- if licenses|length > 0 -%}{%- do distribution.update({"license": licenses}) -%}{%- endif -%}
@@ -449,44 +573,145 @@
     {%- set sensitiveData = "yes" if ds.containsSensitiveInformation._value is sameas true else "no" -%}
   {%- endif -%}
 
+  {#- ---------- preservation_statement (composed free text, per dataset) ----------
+       Compose from: the archiving solution (+ free-text strategy for "other solution"),
+       the linked archive's type / long-term support (when selected via selectArchive),
+       and the retention answer (+ fixed-period free text). -#}
+  {%- set presParts = [] -%}
+  {%- if ds.hasBeenArchived -%}
+    {%- if ds.hasBeenArchived._value == "trustworthyResearchData" -%}
+      {%- do presParts.append("The data will be deposited in a trustworthy research data repository.") -%}
+    {%- elif ds.hasBeenArchived._value == "otherSolution"
+             and ds.hasBeenArchived.descriptionPreservationStrategy
+             and ds.hasBeenArchived.descriptionPreservationStrategy._value -%}
+      {%- do presParts.append(ds.hasBeenArchived.descriptionPreservationStrategy._value) -%}
+    {%- endif -%}
+  {%- endif -%}
+  {%- if chosen and chosen.typeOfArchive -%}
+    {%- do presParts.append("Archive type: " ~ chosen.typeOfArchive._label ~ ".") -%}
+    {%- if chosen.typeOfArchive._value == "specialPurpose" and chosen.typeOfArchive.longTermSupport -%}
+      {%- do presParts.append("Long-term support beyond the project: " ~ chosen.typeOfArchive.longTermSupport._label ~ ".") -%}
+    {%- endif -%}
+  {%- endif -%}
+  {%- if ds.retention -%}
+    {%- if ds.retention._value == "asLongAsPossible" -%}
+      {%- do presParts.append("Data will be retained as long as technically possible.") -%}
+    {%- elif ds.retention._value == "fixedPeriod" -%}
+      {%- set per = ds.retention.period._value if ds.retention.period else None -%}
+      {%- do presParts.append("Data will be retained for a fixed period" ~ ((" (" ~ per ~ ")") if per else "") ~ ".") -%}
+    {%- endif -%}
+  {%- endif -%}
+  {%- if deletionSummary -%}
+    {%- do presParts.append(deletionSummary) -%}
+  {%- endif -%}
+  {%- set preservationStatement = presParts | join(" ") -%}
+
   {#- ---------- assemble dataset ---------- -#}
   {%- set dataset = {
     "dataset_id": dsId,
     "title": dsTitle,
+    "type": "dataset",
     "personal_data": personalData,
     "sensitive_data": sensitiveData,
     "distribution": [distribution]
   } -%}
   {%- if altIds|length > 0      -%}{%- do dataset.update({"alternate_identifier": altIds}) -%}{%- endif -%}
+  {%- if isReused               -%}{%- do dataset.update({"is_reused": true}) -%}{%- endif -%}
   {%- if dsDescription          -%}{%- do dataset.update({"description": dsDescription}) -%}{%- endif -%}
   {%- if metadataStd|length > 0 -%}{%- do dataset.update({"metadata": metadataStd}) -%}{%- endif -%}
+  {%- if techResources|length>0 -%}{%- do dataset.update({"technical_resource": techResources}) -%}{%- endif -%}
   {%- if qa|length > 0          -%}{%- do dataset.update({"data_quality_assurance": qa}) -%}{%- endif -%}
+  {%- if preservationStatement  -%}{%- do dataset.update({"preservation_statement": preservationStatement}) -%}{%- endif -%}
+  {%- if rightsStatement        -%}{%- do dataset.update({"rights": rightsStatement}) -%}{%- endif -%}
   {%- do datasets.append(dataset) -%}
 {%- endfor -%}
 
+{#- ---------- Data scheduled for deletion (not archived) ----------
+     "List data that you have deleted or will delete" (listHaveDelete) leads,
+     via the "Yes, certain data was/will be deleted" answer (certainDataWas),
+     to "Specify a list of data that you will delete" (specifyListDelete).
+     Each entry is recorded as a dataset so the DMP describes ALL data: its
+     preservation_statement makes clear the data will be deleted rather than
+     preserved, and it carries no distribution (the data is not published). -#}
+{%- if archiving.listHaveDelete and archiving.listHaveDelete._value == "certainDataWas" -%}
+  {%- for it in (archiving.listHaveDelete.specifyListDelete or []) -%}
+    {%- set delTitle = it.briefDescriptionSet._value
+         if (it.briefDescriptionSet and it.briefDescriptionSet._value) else "Data scheduled for deletion" -%}
+    {%- set delReason = "" -%}
+    {%- if it.reasonsDeletion -%}
+      {%- if it.reasonsDeletion._label -%}{%- set delReason = it.reasonsDeletion._label -%}
+      {%- elif it.reasonsDeletion._value -%}{%- set delReason = it.reasonsDeletion._value -%}{%- endif -%}
+    {%- endif -%}
+    {%- set delWhen = it.timepointDeletion._value if (it.timepointDeletion and it.timepointDeletion._value) else "" -%}
+    {%- set delPres = ["This data is scheduled for deletion and will not be preserved."] -%}
+    {%- if delReason -%}{%- do delPres.append("Reason for deletion: " ~ delReason ~ ".") -%}{%- endif -%}
+    {%- if delWhen   -%}{%- do delPres.append("Planned time of deletion: " ~ delWhen ~ ".") -%}{%- endif -%}
+    {%- set delPersonal = "yes" if (delReason and "personal data" in delReason|lower) else "unknown" -%}
+    {%- set delDataset = {
+      "dataset_id": {"identifier": it._uuid, "type": "other"},
+      "title": delTitle,
+      "type": "dataset",
+      "personal_data": delPersonal,
+      "sensitive_data": "unknown",
+      "preservation_statement": delPres | join(" ")
+    } -%}
+    {%- do datasets.append(delDataset) -%}
+  {%- endfor -%}
+{%- endif -%}
 
-{#- ---------------- Costs (from responsibilities chapter) ---------------- -#}
-{%- set costs = [] -%}
-{%- if respres.recurringFees and respres.recurringFees._value is sameas true and respres.recurringFees.indicateCosts3 -%}
-  {%- do costs.append({"title": "Software licenses / recurring costs",
-                       "description": respres.recurringFees.indicateCosts3._value}) -%}
+
+{#- ---------------- Costs (from responsibilities chapter) ----------------
+     Each cost keeps its free-text description. In addition we try to extract a
+     numeric `value` and a `currency_code`:
+       - currency: NOK if the text contains 'NOK' or 'kr'; EUR if it contains 'EUR' or '€'.
+       - value: the single numeric token in the text.
+     If BOTH currencies appear, or MORE THAN ONE numeric token appears, we skip the
+     value/currency enrichment (the description is always kept). This is a deliberately
+     simple heuristic; a numeric token is a whitespace-separated run that parses as a
+     number once thousands separators are removed. -#}
+{%- set costInputs = [] -%}
+{%- if respres.recurringFees and respres.recurringFees._value is sameas true and respres.recurringFees.indicateCosts3 and respres.recurringFees.indicateCosts3._value -%}
+  {%- do costInputs.append({"title": "Software licenses / recurring costs", "description": respres.recurringFees.indicateCosts3._value}) -%}
 {%- endif -%}
-{%- if respres.storageActivePhase and respres.storageActivePhase._value == "yes" and respres.storageActivePhase.indicateCosts2 -%}
-  {%- do costs.append({"title": "Active-phase data storage",
-                       "description": respres.storageActivePhase.indicateCosts2._value}) -%}
+{%- if respres.storageActivePhase and respres.storageActivePhase._value == "yes" and respres.storageActivePhase.indicateCosts2 and respres.storageActivePhase.indicateCosts2._value -%}
+  {%- do costInputs.append({"title": "Active-phase data storage", "description": respres.storageActivePhase.indicateCosts2._value}) -%}
 {%- endif -%}
-{%- if respres.preservationArchivingAssociated and respres.preservationArchivingAssociated._value == "yes" and respres.preservationArchivingAssociated.indicateCosts -%}
-  {%- do costs.append({"title": "Preservation and archiving",
-                       "description": respres.preservationArchivingAssociated.indicateCosts._value}) -%}
+{%- if respres.preservationArchivingAssociated and respres.preservationArchivingAssociated._value == "yes" and respres.preservationArchivingAssociated.indicateCosts and respres.preservationArchivingAssociated.indicateCosts._value -%}
+  {%- do costInputs.append({"title": "Preservation and archiving", "description": respres.preservationArchivingAssociated.indicateCosts._value}) -%}
 {%- endif -%}
-{%- if respres.hasDataPublicationBudget and respres.hasDataPublicationBudget._value is sameas true and respres.hasDataPublicationBudget.budget -%}
-  {%- do costs.append({"title": "Data publication budget",
-                       "description": respres.hasDataPublicationBudget.budget._value}) -%}
+{%- if respres.hasDataPublicationBudget and respres.hasDataPublicationBudget._value is sameas true and respres.hasDataPublicationBudget.budget and respres.hasDataPublicationBudget.budget._value -%}
+  {%- do costInputs.append({"title": "Data publication budget", "description": respres.hasDataPublicationBudget.budget._value}) -%}
 {%- endif -%}
 {%- if respres.totalCostsManagement and respres.totalCostsManagement._value -%}
-  {%- do costs.append({"title": "Total data management cost",
-                       "description": respres.totalCostsManagement._value}) -%}
+  {%- do costInputs.append({"title": "Total data management cost", "description": respres.totalCostsManagement._value}) -%}
 {%- endif -%}
+
+{%- set costs = [] -%}
+{%- for ci in costInputs -%}
+  {%- set entry = {"title": ci.title, "description": ci.description} -%}
+  {%- set desc = ci.description -%}
+  {%- set low = desc|lower -%}
+  {%- set hasNOK = ('nok' in low) or ('kr' in low) -%}
+  {%- set hasEUR = ('eur' in low) or ('€' in desc) -%}
+  {%- set stripped = desc|replace('NOK',' ')|replace('nok',' ')|replace('Nok',' ')|replace('kr',' ')|replace('KR',' ')|replace('Kr',' ')|replace('EUR',' ')|replace('eur',' ')|replace('Eur',' ')|replace('€',' ') -%}
+  {%- set numTokens = [] -%}
+  {%- for tok in stripped.split() -%}
+    {%- set cand = tok|replace(',', '')|replace('.', '') -%}
+    {%- if cand and (cand|float('NA')) != 'NA' and (cand|int(-1)) != -1 -%}
+      {%- do numTokens.append(tok|replace(',', '')) -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- if not (hasNOK and hasEUR) -%}
+    {%- if hasNOK -%}{%- do entry.update({"currency_code": "NOK"}) -%}
+    {%- elif hasEUR -%}{%- do entry.update({"currency_code": "EUR"}) -%}{%- endif -%}
+    {%- if numTokens|length == 1 -%}
+      {%- set num = numTokens[0]|float -%}
+      {%- set num = num|int if num == num|int else num -%}
+      {%- do entry.update({"value": num}) -%}
+    {%- endif -%}
+  {%- endif -%}
+  {%- do costs.append(entry) -%}
+{%- endfor -%}
 
 {#- ---------------- Assemble top-level dmp object ---------------- -#}
 {%- set dmpTitle = (admin.dmpTitle._value if admin.dmpTitle else "") or ctx.project.name -%}

@@ -37,6 +37,10 @@ For the work captured in this thread, the following AI tooling was used:
 * **Michael Dondrup** <[mdondrup@gmail.com](mailto:mdondrup@gmail.com)>
   * ORCID: [0000-0002-2371-5928](https://orcid.org/0000-0002-2371-5928)
   * GitHub: [@mdondrup](https://github.com/mdondrup)
+* **Korbinian Bösl** <[korbinian.bosl@uib.no](mailto:korbinian.bosl@uib.no)>
+  * ORCID: [0000-0003-0498-4273](https://orcid.org/0000-0003-0498-4273)
+  * GitHub: [@korbinib](https://github.com/korbinib)
+
 
 
 ## Changelog

@@ -210,9 +210,6 @@
     {#- The KM's single affirmative answer is "Yes (or uncertain)" (json.value "uncertain");
         per request it is treated as an affirmative "yes". -#}
     {%- do ethicalDesc.append("Personal data will be collected or processed.") -%}
-    {%- if pcp.brieflyDescribePersonal and pcp.brieflyDescribePersonal._value -%}
-      {%- do ethicalDesc.append("Personal data: " ~ pcp.brieflyDescribePersonal._value) -%}
-    {%- endif -%}
     {%- if pcp.documentParticipantsInformation and pcp.documentParticipantsInformation._value -%}
       {%- do ethicalDesc.append("Participant information: " ~ pcp.documentParticipantsInformation._value) -%}
     {%- endif -%}

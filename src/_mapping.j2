@@ -82,7 +82,7 @@
 {%- set projects = [] -%}
 {%- for i in projectsItems -%}
   {%- set projectName = repliesMap[[projectsPath, i, uuids.projectNameQUuid]|reply_path]|reply_str_value -%}
-  {%- set projectAbstract = repliesMap[[projectsPath, i, uuids.projectAbstractQUuid]|reply_path]|reply_str_value -%}
+  {%- set projectAbstract = dc.project.replies.get([projectsPath, i, uuids.projectAbstractQUuid]|reply_path)  -%}
   {%- set projectStart = repliesMap[[projectsPath, i, uuids.projectStartQUuid]|reply_path]|reply_str_value -%}
   {%- set projectEnd = repliesMap[[projectsPath, i, uuids.projectEndQUuid]|reply_path]|reply_str_value -%}
 
@@ -141,7 +141,7 @@
     {%- do project.update({"end": projectEnd}) -%}
   {%- endif -%}
   {%- if projectAbstract -%}
-    {%- do project.update({"description": projectAbstract}) -%}
+    {%- do project.update({"description": projectAbstract.markdown_plain}) -%}
   {%- endif -%}
   {%- if funding|length > 0 -%}
     {%- do project.update({"funding": funding}) -%}
@@ -328,7 +328,7 @@
 {%- set datasets = [] -%}
 {%- for i in datasetsItems -%}
   {%- set datasetName = repliesMap[[datasetsPath, i, uuids.producingNameQUuid]|reply_path]|reply_str_value -%}
-  {%- set datasetDescription = repliesMap[[datasetsPath, i, uuids.producingDescriptionQUuid]|reply_path]|reply_str_value -%}
+  {%- set datasetDescription = dc.project.replies.get([datasetsPath, i, uuids.producingDescriptionQUuid]|reply_path) -%}
   {%- set datasetPersonalAUuid = repliesMap[[datasetsPath, i, uuids.producingPersonalQUuid]|reply_path]|reply_str_value -%}
   {%- set datasetSensitiveAUuid = repliesMap[[datasetsPath, i, uuids.producingSensitiveQUuid]|reply_path]|reply_str_value -%}
 
@@ -449,7 +449,7 @@
     "sensitive_data": sensitiveData|default("")
   } -%}
   {%- if datasetDescription -%}
-    {%- do dataset.update({"description": datasetDescription}) -%}
+    {%- do dataset.update({"description": datasetDescription.markdown_plain}) -%}
   {%- endif -%}
   {%- if distributions|length > 0 -%}
     {%- do dataset.update({"distribution": distributions}) -%}

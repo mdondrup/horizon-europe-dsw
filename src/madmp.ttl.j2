@@ -235,7 +235,9 @@
           {%- for license in distribution["license"] %}
             [ a dcso:License ;
               dcso:licenseRef {{ license["license_ref"]|tojson }} ;
+              {%- if "start_date" in license.keys() %}
               dcso:startDate {{ license["start_date"]|tojson }}^^xsd:date ;
+              {%- endif %}
             ] {{ ";" if loop.last else "," }}
           {%- endfor -%}
           {%- endif %}

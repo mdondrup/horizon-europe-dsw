@@ -353,8 +353,9 @@
             "identifier": "https://www.omicsdi.org/dataset/" ~ omics.source ~ "/" ~ omics.id,
             "type": "url"
           } -%}
-          {#- keep the bare accession as an alternate identifier (1.2 field) -#}
-          {%- do altIds.append({"identifier": omics.id, "type": "accession number"}) -%}
+          {#- keep the bare accession as an alternate identifier (1.2 field).
+              maDMP identifier `type` enum is handle/doi/ark/url/other -> use "other". -#}
+          {%- do altIds.append({"identifier": omics.id, "type": "other"}) -%}
         {%- endif -%}
 
       {#- (c) Manual link / reference -#}
@@ -491,8 +492,13 @@
         {%- set licenseRef = ds.licenseDataset.license._value -%}
       {%- endif -%}
     {%- endif -%}
-    {%- if licenseRef and licenseStart -%}
-      {%- do licenses.append({"license_ref": licenseRef, "start_date": licenseStart}) -%}
+    {#- Emit the license whenever a reference is known. start_date is included only
+        when the questionnaire provides it (a license without a starting date is kept
+        rather than dropped). -#}
+    {%- if licenseRef -%}
+      {%- set lic = {"license_ref": licenseRef} -%}
+      {%- if licenseStart -%}{%- do lic.update({"start_date": licenseStart}) -%}{%- endif -%}
+      {%- do licenses.append(lic) -%}
     {%- endif -%}
   {%- endif -%}
 

@@ -131,9 +131,13 @@
 {%- set fundings = [] -%}
 {%- if research.didPlanApply and research.didPlanApply._value == "yes" -%}
   {%- for f in research.didPlanApply.fundings -%}
+    {#- funder is a ROR integration: the raw payload exposes the ROR URL as `id`
+        (same as the affiliation block above). The plain `_value` is rendered
+        markdown (a ROR badge + link), so only fall back to it when there is no
+        raw payload (e.g. a manually typed URL). -#}
     {%- set funderUrl = "" -%}
-    {%- if f.funder and f.funder._raw and f.funder._raw.uri -%}
-      {%- set funderUrl = f.funder._raw.uri -%}
+    {%- if f.funder and f.funder._raw and f.funder._raw.id -%}
+      {%- set funderUrl = f.funder._raw.id -%}
     {%- elif f.funder and f.funder._value -%}
       {%- set funderUrl = f.funder._value -%}
     {%- endif -%}

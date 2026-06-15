@@ -80,8 +80,8 @@
       {%- if "ror_display" in (nm.types or []) -%}{%- set ns.affName = nm.value -%}{%- endif -%}
     {%- endfor -%}
     {%- if ns.affName -%}
-      {%- do affiliations.append({"name": ns.affName,
-                                  "affiliation_id": {"identifier": aff.id, "type": "ror"}}) -%}
+      {%- do affiliations.append({"affiliation_id": {"identifier": aff.id, "type": "ror"},
+                                  "name": ns.affName}) -%}
     {%- endif -%}
   {%- endif -%}
 
@@ -96,13 +96,13 @@
   {%- endif -%}
 
   {%- if name and roles|length > 0 -%}
-    {%- set entry = {
-      "name": name,
-      "role": roles|sort,
-      "contributor_id": contributorId
-    } -%}
-    {%- if email -%}{%- do entry.update({"mbox": email}) -%}{%- endif -%}
+    {#- RDA DCS contributor field order: affiliation, contributor_id, mbox, name, role. -#}
+    {%- set entry = {} -%}
     {%- if affiliations|length > 0 -%}{%- do entry.update({"affiliation": affiliations}) -%}{%- endif -%}
+    {%- do entry.update({"contributor_id": contributorId}) -%}
+    {%- if email -%}{%- do entry.update({"mbox": email}) -%}{%- endif -%}
+    {%- do entry.update({"name": name}) -%}
+    {%- do entry.update({"role": roles|sort}) -%}
     {%- do contributors.append(entry) -%}
     {%- if "contactPerson" in roleValues and email -%}
       {%- do contacts.append(entry) -%}
@@ -178,11 +178,13 @@
 {%- set projectStart = research.startDate._value if research.startDate else "" -%}
 {%- set projectEnd   = research.endDate._value if research.endDate else "" -%}
 {%- if projectName -%}
-  {%- set project = {"title": projectName} -%}
-  {%- if projectStart -%}{%- do project.update({"start": projectStart}) -%}{%- endif -%}
-  {%- if projectEnd   -%}{%- do project.update({"end": projectEnd}) -%}{%- endif -%}
+  {#- RDA DCS project field order: description, end, funding, start, title. -#}
+  {%- set project = {} -%}
   {%- if projectAbstract -%}{%- do project.update({"description": projectAbstract}) -%}{%- endif -%}
+  {%- if projectEnd   -%}{%- do project.update({"end": projectEnd}) -%}{%- endif -%}
   {%- if fundings|length > 0 -%}{%- do project.update({"funding": fundings}) -%}{%- endif -%}
+  {%- if projectStart -%}{%- do project.update({"start": projectStart}) -%}{%- endif -%}
+  {%- do project.update({"title": projectName}) -%}
   {%- do projects.append(project) -%}
 {%- endif -%}
 
@@ -410,8 +412,10 @@
           {#- technical_resource: instruments used for this dataset (name + description) -#}
           {%- for ins in (item.instruments or []) -%}
             {%- if ins.name and ins.name._value -%}
-              {%- set tr = {"name": ins.name._value} -%}
+              {#- RDA DCS technical_resource field order: description, name. -#}
+              {%- set tr = {} -%}
               {%- if ins.description and ins.description._value -%}{%- do tr.update({"description": ins.description._value}) -%}{%- endif -%}
+              {%- do tr.update({"name": ins.name._value}) -%}
               {%- do techResources.append(tr) -%}
             {%- endif -%}
           {%- endfor -%}
@@ -455,13 +459,13 @@
            if (stdList and stdRef) else None -%}
       {%- if stdItem and stdItem.standard and stdItem.standard._raw and stdItem.standard._raw.doi -%}
         {%- set std = stdItem.standard._raw -%}
-        {%- set mEntry = {
-          "language": "eng",
-          "metadata_standard_id": {"identifier": "https://doi.org/" ~ std.doi, "type": "url"}
-        } -%}
         {%- set mDesc = stdItem.provideContextStandard._value
              if (stdItem.provideContextStandard and stdItem.provideContextStandard._value) else std.name -%}
+        {#- RDA DCS metadata field order: description, language, metadata_standard_id. -#}
+        {%- set mEntry = {} -%}
         {%- if mDesc -%}{%- do mEntry.update({"description": mDesc}) -%}{%- endif -%}
+        {%- do mEntry.update({"language": "eng"}) -%}
+        {%- do mEntry.update({"metadata_standard_id": {"identifier": "https://doi.org/" ~ std.doi, "type": "url"}}) -%}
         {%- do metadataStd.append(mEntry) -%}
       {%- endif -%}
     {#- TODO: handle 'metadataStandardInformation' (in-dataset FAIRsharing import)
@@ -506,27 +510,6 @@
     {%- endif -%}
   {%- endif -%}
 
-  {%- set distribution = {"title": dsTitle} -%}
-  {%- if accessVal -%}{%- do distribution.update({"data_access": accessVal}) -%}{%- endif -%}
-  {%- if ds.fileFormatDataset and ds.fileFormatDataset._value -%}
-    {%- do distribution.update({"format": [ds.fileFormatDataset._value]}) -%}
-  {%- endif -%}
-
-  {#- byte_size: the questionnaire captures size in GB (question text: "…in GB").
-       RDA byte_size is an INTEGER number of bytes. Convert (decimal GB = 1e9).
-       Use 1073741824 instead if your users mean binary GiB. -#}
-  {%- if ds.sizeDataset and ds.sizeDataset._value -%}
-    {%- do distribution.update({"byte_size": (ds.sizeDataset._value | float * 1000000000) | int}) -%}
-  {%- endif -%}
-
-  {#- download_url + access_url: the resolved PID landing/URL, when it is http(s).
-       In DCAT, access_url is the landing page and download_url the direct file;
-       the resolved PID serves as both here. -#}
-  {%- if dsId.identifier and dsId.identifier.startswith("http") -%}
-    {%- do distribution.update({"download_url": dsId.identifier}) -%}
-    {%- do distribution.update({"access_url": dsId.identifier}) -%}
-  {%- endif -%}
-
   {#- host: built from whichever "Name of the archive" (nameArchive) branch is filled:
        selectAnswerIdentify       -> selectArchive (ItemSelect) -> identifyArchiveDepositing
                                      item's repository (FAIRsharing payload)
@@ -555,20 +538,34 @@
       {%- set hostTitle = na.archive._value -%}
     {%- endif -%}
   {%- endif -%}
+  {#- Assemble host in RDA DCS field order (description, host_id, pid_system, title, url).
+       hasHost mirrors the original "host is non-empty" guard so pid_system (added when the
+       dataset PID is a DOI, i.e. the host issues DOIs) is only emitted with a real host. -#}
+  {%- set hasHost = ((repo and (repo.description or repo.url or repo.name or repo.homepage)) or hostTitle) -%}
   {%- set host = {} -%}
-  {%- if repo -%}
-    {%- if repo.name -%}{%- do host.update({"title": repo.name}) -%}{%- endif -%}
-    {%- if repo.homepage -%}{%- do host.update({"url": repo.homepage}) -%}{%- endif -%}
-    {%- if repo.url -%}{%- do host.update({"host_id": [{"identifier": repo.url, "type": "url"}]}) -%}{%- endif -%}
-    {%- if repo.description -%}{%- do host.update({"description": repo.description}) -%}{%- endif -%}
-  {%- elif hostTitle -%}
-    {%- do host.update({"title": hostTitle}) -%}
-  {%- endif -%}
-  {#- pid_system: if the dataset PID is a DOI, the host issues DOIs. -#}
-  {%- if host and dsId.type == "doi" -%}{%- do host.update({"pid_system": ["doi"]}) -%}{%- endif -%}
-  {%- if host -%}{%- do distribution.update({"host": host}) -%}{%- endif -%}
+  {%- if repo and repo.description -%}{%- do host.update({"description": repo.description}) -%}{%- endif -%}
+  {%- if repo and repo.url -%}{%- do host.update({"host_id": [{"identifier": repo.url, "type": "url"}]}) -%}{%- endif -%}
+  {%- if hasHost and dsId.type == "doi" -%}{%- do host.update({"pid_system": ["doi"]}) -%}{%- endif -%}
+  {%- if repo and repo.name -%}{%- do host.update({"title": repo.name}) -%}{%- endif -%}
+  {%- if repo and repo.homepage -%}{%- do host.update({"url": repo.homepage}) -%}{%- endif -%}
+  {%- if (not repo) and hostTitle -%}{%- do host.update({"title": hostTitle}) -%}{%- endif -%}
 
+  {#- ---------- assemble distribution (RDA DCS field order:
+       access_url, byte_size, data_access, download_url, format, host, license, title) ----------
+       byte_size: the questionnaire captures size in GB (question text: "…in GB"); RDA byte_size
+       is an INTEGER number of bytes (decimal GB = 1e9; use 1073741824 for binary GiB).
+       download_url + access_url: the resolved PID landing/URL, when it is http(s). In DCAT,
+       access_url is the landing page and download_url the direct file; the resolved PID serves
+       as both here. -#}
+  {%- set distribution = {} -%}
+  {%- if dsId.identifier and dsId.identifier.startswith("http") -%}{%- do distribution.update({"access_url": dsId.identifier}) -%}{%- endif -%}
+  {%- if ds.sizeDataset and ds.sizeDataset._value -%}{%- do distribution.update({"byte_size": (ds.sizeDataset._value | float * 1000000000) | int}) -%}{%- endif -%}
+  {%- if accessVal -%}{%- do distribution.update({"data_access": accessVal}) -%}{%- endif -%}
+  {%- if dsId.identifier and dsId.identifier.startswith("http") -%}{%- do distribution.update({"download_url": dsId.identifier}) -%}{%- endif -%}
+  {%- if ds.fileFormatDataset and ds.fileFormatDataset._value -%}{%- do distribution.update({"format": [ds.fileFormatDataset._value]}) -%}{%- endif -%}
+  {%- if host -%}{%- do distribution.update({"host": host}) -%}{%- endif -%}
   {%- if licenses|length > 0 -%}{%- do distribution.update({"license": licenses}) -%}{%- endif -%}
+  {%- do distribution.update({"title": dsTitle}) -%}
 
   {#- ---------- personal / sensitive flags ---------- -#}
   {%- set personalData = "unknown" -%}
@@ -613,23 +610,25 @@
   {%- endif -%}
   {%- set preservationStatement = presParts | join(" ") -%}
 
-  {#- ---------- assemble dataset ---------- -#}
-  {%- set dataset = {
-    "dataset_id": dsId,
-    "title": dsTitle,
-    "type": "dataset",
-    "personal_data": personalData,
-    "sensitive_data": sensitiveData,
-    "distribution": [distribution]
-  } -%}
+  {#- ---------- assemble dataset (RDA DCS field order:
+       alternate_identifier, data_quality_assurance, dataset_id, description, distribution,
+       is_reused, metadata, personal_data, preservation_statement, rights, sensitive_data,
+       technical_resource, title, type) ---------- -#}
+  {%- set dataset = {} -%}
   {%- if altIds|length > 0      -%}{%- do dataset.update({"alternate_identifier": altIds}) -%}{%- endif -%}
-  {%- if isReused               -%}{%- do dataset.update({"is_reused": true}) -%}{%- endif -%}
-  {%- if dsDescription          -%}{%- do dataset.update({"description": dsDescription}) -%}{%- endif -%}
-  {%- if metadataStd|length > 0 -%}{%- do dataset.update({"metadata": metadataStd}) -%}{%- endif -%}
-  {%- if techResources|length>0 -%}{%- do dataset.update({"technical_resource": techResources}) -%}{%- endif -%}
   {%- if qa|length > 0          -%}{%- do dataset.update({"data_quality_assurance": qa}) -%}{%- endif -%}
+  {%- do dataset.update({"dataset_id": dsId}) -%}
+  {%- if dsDescription          -%}{%- do dataset.update({"description": dsDescription}) -%}{%- endif -%}
+  {%- do dataset.update({"distribution": [distribution]}) -%}
+  {%- if isReused               -%}{%- do dataset.update({"is_reused": true}) -%}{%- endif -%}
+  {%- if metadataStd|length > 0 -%}{%- do dataset.update({"metadata": metadataStd}) -%}{%- endif -%}
+  {%- do dataset.update({"personal_data": personalData}) -%}
   {%- if preservationStatement  -%}{%- do dataset.update({"preservation_statement": preservationStatement}) -%}{%- endif -%}
   {%- if rightsStatement        -%}{%- do dataset.update({"rights": rightsStatement}) -%}{%- endif -%}
+  {%- do dataset.update({"sensitive_data": sensitiveData}) -%}
+  {%- if techResources|length>0 -%}{%- do dataset.update({"technical_resource": techResources}) -%}{%- endif -%}
+  {%- do dataset.update({"title": dsTitle}) -%}
+  {%- do dataset.update({"type": "dataset"}) -%}
   {%- do datasets.append(dataset) -%}
 {%- endfor -%}
 
@@ -654,13 +653,14 @@
     {%- if delReason -%}{%- do delPres.append("Reason for deletion: " ~ delReason ~ ".") -%}{%- endif -%}
     {%- if delWhen   -%}{%- do delPres.append("Planned time of deletion: " ~ delWhen ~ ".") -%}{%- endif -%}
     {%- set delPersonal = "yes" if (delReason and "personal data" in delReason|lower) else "unknown" -%}
+    {#- RDA DCS dataset field order. -#}
     {%- set delDataset = {
       "dataset_id": {"identifier": it._uuid, "type": "other"},
-      "title": delTitle,
-      "type": "dataset",
       "personal_data": delPersonal,
+      "preservation_statement": delPres | join(" "),
       "sensitive_data": "unknown",
-      "preservation_statement": delPres | join(" ")
+      "title": delTitle,
+      "type": "dataset"
     } -%}
     {%- do datasets.append(delDataset) -%}
   {%- endfor -%}
@@ -695,7 +695,6 @@
 
 {%- set costs = [] -%}
 {%- for ci in costInputs -%}
-  {%- set entry = {"title": ci.title, "description": ci.description} -%}
   {%- set desc = ci.description -%}
   {%- set low = desc|lower -%}
   {%- set hasNOK = ('nok' in low) or ('kr' in low) -%}
@@ -708,14 +707,18 @@
       {%- do numTokens.append(tok|replace(',', '')) -%}
     {%- endif -%}
   {%- endfor -%}
+  {#- RDA DCS cost field order: currency_code, description, title, value. -#}
+  {%- set entry = {} -%}
   {%- if not (hasNOK and hasEUR) -%}
     {%- if hasNOK -%}{%- do entry.update({"currency_code": "NOK"}) -%}
     {%- elif hasEUR -%}{%- do entry.update({"currency_code": "EUR"}) -%}{%- endif -%}
-    {%- if numTokens|length == 1 -%}
-      {%- set num = numTokens[0]|float -%}
-      {%- set num = num|int if num == num|int else num -%}
-      {%- do entry.update({"value": num}) -%}
-    {%- endif -%}
+  {%- endif -%}
+  {%- do entry.update({"description": ci.description}) -%}
+  {%- do entry.update({"title": ci.title}) -%}
+  {%- if not (hasNOK and hasEUR) and numTokens|length == 1 -%}
+    {%- set num = numTokens[0]|float -%}
+    {%- set num = num|int if num == num|int else num -%}
+    {%- do entry.update({"value": num}) -%}
   {%- endif -%}
   {%- do costs.append(entry) -%}
 {%- endfor -%}
@@ -723,30 +726,33 @@
 {#- ---------------- Assemble top-level dmp object ---------------- -#}
 {%- set dmpTitle = (admin.dmpTitle._value if admin.dmpTitle else "") or ctx.project.name -%}
 
-{%- set dmp = {
-  "title": dmpTitle,
-  "description": madmpDescription,
-  "language": "eng",
-  "dmp_id": madmpDmpId,
-  "contributor": contributors,
-  "project": projects,
-  "ethical_issues_exist": ethicalIssuesExist,
-  "dataset": datasets,
-  "created": ctx.project.createdAt|datetime_format("%Y-%m-%dT%H:%M:%SZ"),
-  "modified": ctx.project.updatedAt|datetime_format("%Y-%m-%dT%H:%M:%SZ"),
-  "cost": costs
-} -%}
-
+{#- Assemble the top-level dmp object in RDA DCS field order:
+     contact, contributor, cost, created, dataset, description, dmp_id,
+     ethical_issues_description, ethical_issues_exist, language, modified, project, title.
+     Built incrementally (rather than as a literal) so optional members land in the
+     correct position instead of being appended at the end. -#}
+{%- set dmp = {} -%}
 {%- if contacts|length > 0 -%}
+  {#- contact field order: contact_id, mbox, name (affiliation not emitted). -#}
   {%- do dmp.update({"contact": {
     "contact_id": contacts[0]["contributor_id"],
     "mbox": contacts[0]["mbox"],
     "name": contacts[0]["name"]
   }}) -%}
 {%- endif -%}
-
+{%- do dmp.update({"contributor": contributors}) -%}
+{%- do dmp.update({"cost": costs}) -%}
+{%- do dmp.update({"created": ctx.project.createdAt|datetime_format("%Y-%m-%dT%H:%M:%SZ")}) -%}
+{%- do dmp.update({"dataset": datasets}) -%}
+{%- do dmp.update({"description": madmpDescription}) -%}
+{%- do dmp.update({"dmp_id": madmpDmpId}) -%}
 {%- if ethicalIssuesDescription -%}
   {%- do dmp.update({"ethical_issues_description": ethicalIssuesDescription}) -%}
 {%- endif -%}
+{%- do dmp.update({"ethical_issues_exist": ethicalIssuesExist}) -%}
+{%- do dmp.update({"language": "eng"}) -%}
+{%- do dmp.update({"modified": ctx.project.updatedAt|datetime_format("%Y-%m-%dT%H:%M:%SZ")}) -%}
+{%- do dmp.update({"project": projects}) -%}
+{%- do dmp.update({"title": dmpTitle}) -%}
 
 {%- set madmp = {"dmp": dmp} -%}

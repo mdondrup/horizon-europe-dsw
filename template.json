@@ -5,7 +5,7 @@
   "name": "maDMP (RDA DMP Common Standard)",
   "description": "Machine-actionable DMP according to RDA DMP Common Standard 1.2",
   "license": "Apache-2.0",
-  "metamodelVersion": "18",
+  "metamodelVersion": "18.1",
   "allowedPackages": [
     {
       "orgId": "research.data.no",

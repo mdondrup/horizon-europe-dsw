@@ -10,7 +10,7 @@ This template is available through [DSW Registry](https://registry.ds-wizard.org
 
 ## Issues and Contributing
 
-This document template for DSW is available as open-source via GitHub Repository [ds-wizard/madmp-template](https://github.com/ds-wizard/madmp-template), you can [report issues](https://github.com/ds-wizard/madmp-template/issues) there and fork it for customisations or contributions.
+This document template for DSW is available as open-source via GitHub Repository [DHP-stottepakke/madmp-template](https://github.com/DHP-stottepakke/madmp-template), you can [report issues](https://github.com/DHP-stottepakke/madmp-template/issues) there and fork it for customisations or contributions.
 
 
 ## AI-Assisted Development
@@ -37,14 +37,19 @@ For the work captured in this thread, the following AI tooling was used:
 * **Michael Dondrup** <[mdondrup@gmail.com](mailto:mdondrup@gmail.com)>
   * ORCID: [0000-0002-2371-5928](https://orcid.org/0000-0002-2371-5928)
   * GitHub: [@mdondrup](https://github.com/mdondrup)
+* **Korbinian Bösl** <[korbinian.bosl@uib.no](mailto:korbinian.bosl@uib.no)>
+  * ORCID: [0000-0003-0498-4273](https://orcid.org/0000-0003-0498-4273)
+  * GitHub: [@korbinib](https://github.com/korbinib)
+
 
 
 ## Changelog
 
+
 ### 1.29.1
 
 - Fixed text value type questions rendering with markdown
-
+- Export of additional information following [RDA DCS 1.2](https://github.com/RDA-DMP-Common/RDA-DMP-Common-Standard/releases/tag/v1.2) 
 
 ### 1.29.0
 

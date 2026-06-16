@@ -55,7 +55,20 @@
       {%- if contributor["role"]|length > 0 %}
       dcso:role {{ contributor["role"]|map('tojson')|join(', ') }} ;
       {%- endif %}
-      {%- if "name" in contributor.keys() %}
+      {%- if "affiliation" in contributor.keys() and contributor["affiliation"]|length > 0 %}
+      {%- for aff in contributor["affiliation"] %}
+      dcso:hasAffiliation
+        [ a dcso:Affiliation ;
+          foaf:name {{ aff["name"]|tojson }} ;
+          {%- if "affiliation_id" in aff.keys() %}
+          dcso:hasAffiliationId
+            [ a dcso:AffiliationId ;
+              dcso:identifier_type {{ aff["affiliation_id"]["type"]|tojson }} ;
+              dct:identifier {{ aff["affiliation_id"]["identifier"]|tojson }} ;
+            ] ;
+          {%- endif -%}
+        ] ;
+      {%- endfor %}
       {%- endif %}
       foaf:name {{ contributor["name"]|tojson }} ;
     ] {{ ";" if loop.last else "," }}
@@ -127,6 +140,29 @@
       {%- if "description" in dataset.keys() %}
       dct:description {{ dataset["description"]|tojson }} ;
       {%- endif %}
+      {%- if "type" in dataset.keys() %}
+      dct:type {{ dataset["type"]|tojson }} ;
+      {%- endif %}
+      {%- if "is_reused" in dataset.keys() %}
+      dcso:isReused {{ dataset["is_reused"]|tojson }} ;
+      {%- endif %}
+      {%- if "preservation_statement" in dataset.keys() %}
+      dcso:preservationStatement {{ dataset["preservation_statement"]|tojson }} ;
+      {%- endif %}
+      {%- if "rights" in dataset.keys() %}
+      dct:rights {{ dataset["rights"]|tojson }} ;
+      {%- endif %}
+      {%- if "technical_resource" in dataset.keys() and dataset["technical_resource"]|length > 0 %}
+      dcso:hasTechnicalResource
+      {%- for tr in dataset["technical_resource"] %}
+        [ a dcso:TechnicalResource ;
+          dct:title {{ tr["name"]|tojson }} ;
+          {%- if "description" in tr.keys() %}
+          dct:description {{ tr["description"]|tojson }} ;
+          {%- endif -%}
+        ] {{ ";" if loop.last else "," }}
+      {%- endfor -%}
+      {%- endif %}
       dcso:personalData {{ dataset["personal_data"]|tojson }} ;
       dcso:sensitiveData {{ dataset["sensitive_data"]|tojson }} ;
       {%- if "data_quality_assurance" in dataset.keys() and dataset["data_quality_assurance"]|length > 0 %}
@@ -182,6 +218,14 @@
               {%- endif %}
               {%- if "url" in distribution["host"].keys() %}
               dcso:url <{{ distribution["host"]["url"] }}> ;
+              {%- endif %}
+              {%- if "description" in distribution["host"].keys() %}
+              dct:description {{ distribution["host"]["description"]|tojson }} ;
+              {%- endif %}
+              {%- if "pid_system" in distribution["host"].keys() %}
+              {%- for ps in distribution["host"]["pid_system"] %}
+              dcso:pidSystem {{ ps|tojson }} ;
+              {%- endfor %}
               {%- endif -%}
               {#- host.host_id is not representable in DCSO core (no HostId class). -#}
             ] ;
@@ -191,7 +235,9 @@
           {%- for license in distribution["license"] %}
             [ a dcso:License ;
               dcso:licenseRef {{ license["license_ref"]|tojson }} ;
+              {%- if "start_date" in license.keys() %}
               dcso:startDate {{ license["start_date"]|tojson }}^^xsd:date ;
+              {%- endif %}
             ] {{ ";" if loop.last else "," }}
           {%- endfor -%}
           {%- endif %}

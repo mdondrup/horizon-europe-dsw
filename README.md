@@ -33,22 +33,9 @@ For the work captured in this thread, the following AI tooling was used:
 
 ### Contributors
 
-* **Marek Suchánek** <[marek.suchanek@ds-wizard.org](mailto:marek.suchanek@ds-wizard.org)>
-  * ORCID: [0000-0001-7525-9218](https://orcid.org/0000-0001-7525-9218)
-  * GitHub: [@MarekSuchanek](https://github.com/MarekSuchanek)
-* **Kryštof Komanec** <[krystof.komanec@ds-wizard.org](mailto:krystof.komanec@ds-wizard.org)>
-  * ORCID: [0000-0003-3856-1682](https://orcid.org/0000-0003-3856-1682)
-  * GitHub: [@krystofkomanec](https://github.com/krystofkomanec)
-* **Jana Martínková** <[jana.martinkova@ds-wizard.org](mailto:jana.martinkova@ds-wizard.org)>
-  * ORCID: [0000-0001-8575-6533](https://orcid.org/0000-0001-8575-6533)
-  * GitHub: [@jmartinkova](https://github.com/jmartinkova)
 * **Michael Dondrup** <[mdondrup@gmail.com](mailto:mdondrup@gmail.com)>
   * ORCID: [0000-0002-2371-5928](https://orcid.org/0000-0002-2371-5928)
   * GitHub: [@mdondrup](https://github.com/mdondrup)
-* **Korbinian Bösl** <[korbinian.bosl@uib.no](mailto:korbinian.bosl@uib.no)>
-  * ORCID: [0000-0003-0498-4273](https://orcid.org/0000-0003-0498-4273)
-  * GitHub: [@korbinib](https://github.com/korbinib)
-
 
 
 ## Changelog

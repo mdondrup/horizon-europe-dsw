@@ -15,6 +15,11 @@ It requires the `research.data.no:norway-generic` knowledge model (version 1.2.0
 
 This template is available through [DSW Registry](https://registry.ds-wizard.org/templates).
 
+This repo contains rendering tools for local development and testing. To render the template locally, you can use the `render.py` script:
+
+```bash
+.venv/bin/python tools/render.py --input input/Example-DMP.json --template "$PWD/src/horizon-dmp.html.j2" -o out/example-horizon-dmp.html
+.venv/bin/python tools/html_to_docx.py out/example-horizon-dmp.html out/example-horizon-dmp.docx
 
 ## Issues and Contributing
 

@@ -20,6 +20,7 @@ This repo contains rendering tools for local development and testing. To render 
 ```bash
 .venv/bin/python tools/render.py --input input/Example-DMP.json --template "$PWD/src/horizon-dmp.html.j2" -o out/example-horizon-dmp.html
 .venv/bin/python tools/html_to_docx.py out/example-horizon-dmp.html out/example-horizon-dmp.docx
+```
 
 ## Issues and Contributing
 

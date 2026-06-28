@@ -24,7 +24,7 @@ This repo contains rendering tools for local development and testing. To render 
 
 ## Issues and Contributing
 
-This document template for DSW is available as open-source via GitHub Repository [DHP-stottepakke/madmp-template](https://github.com/DHP-stottepakke/madmp-template), you can [report issues](https://github.com/DHP-stottepakke/madmp-template/issues) there and fork it for customisations or contributions.
+This document template for DSW is available as open-source via GitHub Repository [DHP-stottepakke/horizon-europe-dsw](https://github.com/DHP-stottepakke/horizon-europe-dsw), you can [report issues](https://github.com/DHP-stottepakke/horizon-europe-dsw/issues) there and fork it for customisations or contributions.
 
 
 ## AI-Assisted Development

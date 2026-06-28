@@ -34,7 +34,7 @@ Some recent changes in this repository were developed with AI-assisted tooling. 
 For the work captured in this thread, the following AI tooling was used:
 
 - Agent: GitHub Copilot coding agent
-- Models: Claude Opus 4.8, GPT-5.4
+- Models: Claude Opus 4.8, Claude Sonnet 4.6, GPT-5.3 codex
 
 
 ### Contributors

@@ -1,5 +1,6 @@
 env/
 .env
+*api*key*
 .venv/
 template.zip
 template*.zip

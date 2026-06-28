@@ -1,0 +1,548 @@
+{#-
+  Horizon Europe Data Management Plan (HTML for pandoc -> DOCX).
+
+  Reproduces the structure of the official Horizon Europe DMP template
+  (input/data-management-plan_he_en.docx) and fills each guidance question
+  with answers extracted from the Norwegian Generic KM
+  (research.data.no:norway-generic:1.2.0+).
+
+  Strategy mirrors src/_mapping.j2:
+    - Use the official `extract_replies` filter (DSW >= 4.20): annotation-based
+      `json.key` / `json.value` navigation, no UUID references.
+    - All access is guarded; unanswered questions render a "(not answered)"
+      placeholder so the HE structure stays complete.
+
+  Output: HTML. The Word format (template.json) runs this through pandoc with
+  the HE docx as `--reference-doc` so headings (Heading 2 / Heading 3) and the
+  body style match the official template.
+
+  Reply shape recap (from extract_replies):
+    - ValueQuestion       -> { _value: str }
+    - IntegrationQuestion -> { _value: md, _raw: payload }
+    - OptionsQuestion     -> { _uuid, _label, _value, ...followUps } | None
+    - MultiChoiceQuestion -> [ { _uuid, _label, _value } ]
+    - ListQuestion        -> [ { _uuid, ...childQuestions } ]
+    - Unanswered          -> None (or [] for list/multichoice with json.key)
+-#}
+{%- set dc = ctx|to_context_obj -%}
+{%- set replies = dc|extract_replies -%}
+{%- set admin      = replies.administrativeInformation -%}
+{%- set research   = replies.researchProjectChapter -%}
+{%- set legal      = replies.legalEthicalAspectsChapter -%}
+{%- set storing    = replies.storingProtectingChapter -%}
+{%- set reusing    = replies.reusingCollectingChapter -%}
+{%- set datadoc    = replies.creatingData -%}
+{%- set processing = replies.processingDataChapter -%}
+{%- set archiving  = replies.archivingPublishingChapter -%}
+{%- set respres    = replies.responsibilitiesResourcesChapter -%}
+
+{#- ---------------- helper macros ---------------- -#}
+
+{#- Display string for a single reply: option/multichoice item -> label,
+    value/integration -> value. Anything else -> empty. -#}
+{%- macro sval(r) -%}
+  {%- if r is mapping -%}
+    {%- if r._label is defined and r._label -%}{{ r._label }}
+    {%- elif r._value is defined and r._value -%}{{ r._value }}
+    {%- endif -%}
+  {%- endif -%}
+{%- endmacro -%}
+
+{#- One labelled markdown line, emitted only when the reply has content.
+    `label` may be empty to emit the bare value. `r` may be a reply mapping
+    or a plain string. -#}
+{%- macro line(label, r) -%}
+  {%- set s = sval(r)|trim if r is mapping else (r|string|trim if r is not none else "") -%}
+  {%- if s -%}
+{% if label %}**{{ label }}:** {% endif %}{{ s }}{{ "\n\n" }}
+  {%- endif -%}
+{%- endmacro -%}
+
+{#- Join the labels of a multichoice list (list of option mappings). -#}
+{%- macro linemulti(label, lst) -%}
+  {%- if lst -%}
+    {%- set labels = lst | map(attribute='_label') | select | list -%}
+    {%- if labels|length > 0 -%}
+{% if label %}**{{ label }}:** {% endif %}{{ labels|join(', ') }}{{ "\n\n" }}
+    {%- endif -%}
+  {%- endif -%}
+{%- endmacro -%}
+
+{#- Render one guidance question: italic prompt + answer (or placeholder). -#}
+{%- macro q(prompt, content) -%}
+<p class="prompt"><span custom-style="Guidance">{{ prompt }}</span></p>
+{%- if content and content|trim -%}
+{{ content|markdown }}
+{%- else -%}
+<p class="answer placeholder"><em>(not answered)</em></p>
+{%- endif %}
+{%- endmacro -%}
+
+{#- ---------------- header values ---------------- -#}
+{%- set projectName = (research.name._value if research.name else "") or ctx.project.name -%}
+{%- set dmpDate = ctx.project.updatedAt|datetime_format("%d/%m/%Y") if ctx.project.updatedAt else "" -%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<!-- <title>{{ projectName }} — Data Management Plan</title> -->
+</head>
+<body>
+
+<div custom-style="Title">DATA MANAGEMENT PLAN</div>
+<div>
+<table>
+  <tr><th colspan="2">PROJECT</th></tr>
+  <tr><td>Project number:</td><td></td></tr>
+  <tr><td>Project acronym:</td><td></td></tr>
+  <tr><td>Project name:</td><td>{{ projectName }}</td></tr>
+</table>
+
+<table>
+  <tr><th colspan="2">DATA MANAGEMENT PLAN</th></tr>
+  <tr><td>Date:</td><td>{{ dmpDate }}</td></tr>
+  <tr><td>Version:</td><td></td></tr>
+</table>
+</div>
+<p>&nbsp;</p>
+{#- ============================================================= -#}
+<h2>Data Summary</h2>
+
+{%- set c %}
+{{ line("Will existing data/records be reused", reusing.reDatasetsRecords) }}
+{{ line("Reasons re-use was discarded", reusing.reDatasetsRecords.brieflyDescribeDiscarded if reusing.reDatasetsRecords else none) }}
+{%- for d in (reusing.reDatasetsRecords.listPublishedArchived if (reusing.reDatasetsRecords and reusing.reDatasetsRecords.listPublishedArchived) else []) -%}
+{{ line("Reused dataset", d.titlePublishedDataset if d.titlePublishedDataset else d.dataset) }}
+{{ line("Description", d.descriptionData if d.descriptionData else none) }}
+{%- endfor -%}
+{%- endset -%}
+{{ q("Will you re-use any existing data and what will you re-use it for? State the reasons if re-use of any existing data has been considered but discarded.", c) }}
+
+{%- set c %}
+{{ line("Project captures data with measurement equipment", reusing.hasMeasuredData) }}
+{%- for m in (reusing.hasMeasuredData.dataMeasurementEquipment if (reusing.hasMeasuredData and reusing.hasMeasuredData.dataMeasurementEquipment) else []) -%}
+{{ line("Measured data", m.dataset if m.dataset else none) }}
+{{ line("Format", m.collectedFormat if m.collectedFormat else none) }}
+{%- endfor -%}
+{{ line("Project collects data via observation/questionnaire/interview", reusing.hasNonMeasuredData) }}
+{%- for n in (reusing.hasNonMeasuredData.datasets if (reusing.hasNonMeasuredData and reusing.hasNonMeasuredData.datasets) else []) -%}
+{{ line("Collected data", n.dataset_1 if n.dataset_1 else none) }}
+{{ line("Format", n.collectedFormat2 if n.collectedFormat2 else none) }}
+{%- endfor -%}
+{{ line("Other data the project will gather", reusing.gather) }}
+{%- for ds in archiving.distributions -%}
+{{ line("Dataset file format", ds.fileFormatDataset if ds.fileFormatDataset else none) }}
+{%- endfor -%}
+{%- endset -%}
+{{ q("What types and formats of data will the project generate or re-use?", c) }}
+
+{%- set c %}
+{%- if research.abstract -%}
+{%- if research.abstract._value == "enterTextualProject" and research.abstract.enterAbstractDescription -%}
+{{ line("", research.abstract.enterAbstractDescription) }}
+{%- elif research.abstract._value == "linkProjectProposal" and research.abstract.linkExternalInformation -%}
+{{ line("Project description", research.abstract.linkExternalInformation) }}
+{%- endif -%}
+{%- endif -%}
+{%- endset -%}
+{{ q("What is the purpose of the data generation or re-use and its relation to the objectives of the project?", c) }}
+
+{%- set c %}
+{{ line("Expected total data volume", storing.expectedTotalVolume) }}
+{{ line("Estimated compute data volume (GB)", processing.get('gigabytes')) }}
+{%- for ds in archiving.distributions -%}
+{{ line("Dataset size (GB)", ds.sizeDataset if ds.sizeDataset else none) }}
+{%- endfor -%}
+{%- endset -%}
+{{ q("What is the expected size of the data that you intend to generate or re-use?", c) }}
+
+{%- set c %}
+{%- for m in (reusing.hasMeasuredData.dataMeasurementEquipment if (reusing.hasMeasuredData and reusing.hasMeasuredData.dataMeasurementEquipment) else []) -%}
+{{ line("Who will execute the measurements and where", m.whoWhere if m.whoWhere else none) }}
+{%- endfor -%}
+{%- for n in (reusing.hasNonMeasuredData.datasets if (reusing.hasNonMeasuredData and reusing.hasNonMeasuredData.datasets) else []) -%}
+{{ line("Collection methodology", n.collectionMethodology if n.collectionMethodology else none) }}
+{%- endfor -%}
+{%- for d in (reusing.reDatasetsRecords.listPublishedArchived if (reusing.reDatasetsRecords and reusing.reDatasetsRecords.listPublishedArchived) else []) -%}
+{{ line("Origin (repository/registry)", d.nameRepositoryRegistry if d.nameRepositoryRegistry else none) }}
+{%- endfor -%}
+{%- endset -%}
+{{ q("What is the origin/provenance of the data, either generated or re-used?", c) }}
+
+{%- set c %}
+{{ linemulti("Who could be interested in the data", reusing.whoInterested) }}
+{%- endset -%}
+{{ q("To whom might your data be useful ('data utility'), outside your project?", c) }}
+
+{#- ============================================================= -#}
+<h2>FAIR data</h2>
+
+<h3>Making data findable, including provisions for metadata</h3>
+
+{%- set c %}
+{%- for ds in archiving.distributions -%}
+{{ line("Dataset", ds.dataset if ds.dataset else none) }}
+{%- if ds.hasBeenArchived and ds.hasBeenArchived._value == "trustworthyResearchData" and ds.hasBeenArchived.enterPersistentIdentifier -%}
+{%- set epi = ds.hasBeenArchived.enterPersistentIdentifier -%}
+{{ line("Persistent identifier", epi.linkReference if epi.linkReference else none) }}
+{%- endif -%}
+{%- endfor -%}
+{%- endset -%}
+{{ q("Will data be identified by a persistent identifier?", c) }}
+
+{%- set c %}
+{{ line("Suitable metadata standards/schemas exist", datadoc.miaStandardsExist) }}
+{%- for s in (datadoc.miaStandardsExist.standards if (datadoc.miaStandardsExist and datadoc.miaStandardsExist.standards) else []) -%}
+{{ line("Metadata standard/schema", s.standard if s.standard else none) }}
+{{ line("Context", s.provideContextStandard if s.provideContextStandard else none) }}
+{%- endfor -%}
+{%- for ds in archiving.distributions -%}
+{{ line("Metadata accompanying the dataset", ds.metadataAccompaniesDataset if ds.metadataAccompaniesDataset else none) }}
+{%- endfor -%}
+{%- endset -%}
+{{ q("Will rich metadata be provided to allow discovery? What metadata will be created? What disciplinary or general standards will be followed? In case metadata standards do not exist in your discipline, please outline what type of metadata will be created and how.", c) }}
+
+{%- set c %}
+{{ linemulti("Vocabularies/ontologies used to describe the data", datadoc.usesVocabularies) }}
+{%- endset -%}
+{{ q("Will search keywords be provided in the metadata to optimize the possibility for discovery and then potential re-use?", c) }}
+
+{%- set c %}
+{%- for a in archiving.identifyArchiveDepositing -%}
+{{ line("Archive", a.repository if a.repository else none) }}
+{{ line("Type of archive", a.typeOfArchive if a.typeOfArchive else none) }}
+{%- endfor -%}
+{%- endset -%}
+{{ q("Will metadata be offered in such a way that it can be harvested and indexed?", c) }}
+
+<h3>Making data accessible</h3>
+
+<p class="prompt"><strong>Repository:</strong></p>
+
+{%- set c %}
+{%- for a in archiving.identifyArchiveDepositing -%}
+{{ line("Identified archive/repository", a.repository if a.repository else none) }}
+{{ line("Type of archive", a.typeOfArchive if a.typeOfArchive else none) }}
+{%- endfor -%}
+{%- for ds in archiving.distributions -%}
+{{ line("Data deposited in trustworthy repository", ds.hasBeenArchived if ds.hasBeenArchived else none) }}
+{%- if ds.hasBeenArchived and ds.hasBeenArchived.nameArchive -%}
+{{ line("Name of the archive", ds.hasBeenArchived.nameArchive.archive if ds.hasBeenArchived.nameArchive.archive else none) }}
+{%- endif -%}
+{%- endfor -%}
+{%- endset -%}
+{{ q("Will the data be deposited in a trusted repository?", c) }}
+
+{%- set c %}
+{%- for a in archiving.identifyArchiveDepositing -%}
+{%- if a.typeOfArchive and a.typeOfArchive._value == "specialPurpose" and a.typeOfArchive.longTermSupport -%}
+{{ line("Long-term support beyond the project", a.typeOfArchive.longTermSupport) }}
+{%- endif -%}
+{%- endfor -%}
+{%- endset -%}
+{{ q("Have you explored appropriate arrangements with the identified repository where your data will be deposited?", c) }}
+
+{%- set c %}
+{%- for ds in archiving.distributions -%}
+{%- if ds.hasBeenArchived and ds.hasBeenArchived._value == "trustworthyResearchData" and ds.hasBeenArchived.enterPersistentIdentifier -%}
+{{ line("Persistent identifier", ds.hasBeenArchived.enterPersistentIdentifier.linkReference if ds.hasBeenArchived.enterPersistentIdentifier.linkReference else none) }}
+{%- endif -%}
+{%- endfor -%}
+{%- endset -%}
+{{ q("Does the repository ensure that the data is assigned an identifier? Will the repository resolve the identifier to a digital object?", c) }}
+
+<p class="prompt"><strong>Data:</strong></p>
+
+{%- set c %}
+{{ line("Can all data become open over time", archiving.allOpenOverTime) }}
+{%- if archiving.allOpenOverTime -%}
+{{ line("Legal reasons not to open all data", archiving.allOpenOverTime.legalReasons if archiving.allOpenOverTime.legalReasons else none) }}
+{{ line("Business reasons not to open all data", archiving.allOpenOverTime.businessReasons if archiving.allOpenOverTime.businessReasons else none) }}
+{%- endif -%}
+{%- for ds in archiving.distributions -%}
+{{ line("Dataset", ds.dataset if ds.dataset else none) }}
+{{ line("Who can access", ds.access if ds.access else none) }}
+{%- endfor -%}
+{%- endset -%}
+{{ q("Will all data be made openly available? If certain datasets cannot be shared (or need to be shared under restricted access conditions), explain why, clearly separating legal and contractual reasons from intentional restrictions.", c) }}
+
+{%- set c %}
+{%- for ds in archiving.distributions -%}
+{%- if ds.licenseDataset -%}
+{{ line("Licence starting date (open)", ds.licenseDataset.startingDateLicense if ds.licenseDataset.startingDateLicense else none) }}
+{{ line("Licence starting date (attribution)", ds.licenseDataset.startingDateLicense2 if ds.licenseDataset.startingDateLicense2 else none) }}
+{{ line("Licence starting date (restricted)", ds.licenseDataset.startingDateLicense3 if ds.licenseDataset.startingDateLicense3 else none) }}
+{%- endif -%}
+{%- endfor -%}
+{%- endset -%}
+{{ q("If an embargo is applied to give time to publish or seek protection of the intellectual property (e.g. patents), specify why and how long this will apply, bearing in mind that research data should be made available as soon as possible.", c) }}
+
+{%- set c %}
+{%- for ds in archiving.distributions -%}
+{{ line("Access level", ds.access if ds.access else none) }}
+{%- endfor -%}
+{%- endset -%}
+{{ q("Will the data be accessible through a free and standardized access protocol?", c) }}
+
+{%- set c %}
+{%- for ds in archiving.distributions -%}
+{%- if ds.access and ds.access.accessReusers -%}
+{{ line("How re-users get access", ds.access.accessReusers) }}
+{%- endif -%}
+{%- if ds.access and ds.access.conditions -%}
+{{ line("Conditions", ds.access.conditions) }}
+{%- endif -%}
+{%- endfor -%}
+{%- endset -%}
+{{ q("If there are restrictions on use, how will access be provided to the data, both during and after the end of the project?", c) }}
+
+{%- set c %}
+{%- for ds in archiving.distributions -%}
+{%- if ds.access and ds.access.authentication -%}
+{{ line("Authentication of users", ds.access.authentication) }}
+{%- endif -%}
+{%- if ds.access and ds.access.authorization -%}
+{{ line("Authorization of users", ds.access.authorization) }}
+{%- endif -%}
+{%- endfor -%}
+{%- endset -%}
+{{ q("How will the identity of the person accessing the data be ascertained?", c) }}
+
+{%- set c %}
+{%- for ds in archiving.distributions -%}
+{%- if ds.access and ds.access.committee -%}
+{{ line("Data access committee", ds.access.committee) }}
+{%- endif -%}
+{%- endfor -%}
+{%- endset -%}
+{{ q("Is there a need for a data access committee (e.g. to evaluate/approve access requests to personal/sensitive data)?", c) }}
+
+<p class="prompt"><strong>Metadata:</strong></p>
+
+{%- set c %}
+{%- for ds in archiving.distributions -%}
+{%- if ds.access and ds.access.inMetadata -%}
+{{ line("Conditions published as open metadata", ds.access.inMetadata) }}
+{%- endif -%}
+{%- endfor -%}
+{%- endset -%}
+{{ q("Will metadata be made openly available and licenced under a public domain dedication CC0, as per the Grant Agreement? If not, please clarify why. Will metadata contain information to enable the user to access the data?", c) }}
+
+{%- set c %}
+{%- for ds in archiving.distributions -%}
+{{ line("Retention", ds.retention if ds.retention else none) }}
+{%- if ds.retention and ds.retention._value == "fixedPeriod" and ds.retention.period -%}
+{{ line("Retention period", ds.retention.period) }}
+{%- endif -%}
+{%- endfor -%}
+{%- endset -%}
+{{ q("How long will the data remain available and findable? Will metadata be guaranteed to remain available after data is no longer available?", c) }}
+
+{%- set c %}
+{{ line("Project generates research software/code/models", reusing.generateResearchSoftware) }}
+{%- for sp in archiving.softwarePackages -%}
+{{ line("Software package", sp.nameSoftwareComputational if sp.nameSoftwareComputational else none) }}
+{%- endfor -%}
+{%- endset -%}
+{{ q("Will documentation or reference about any software be needed to access or read the data be included? Will it be possible to include the relevant software (e.g. in open source code)?", c) }}
+
+<h3>Making data interoperable</h3>
+
+{%- set c %}
+{{ linemulti("Vocabularies/ontologies/terminologies", datadoc.usesVocabularies) }}
+{{ line("Suitable metadata standards/schemas exist", datadoc.miaStandardsExist) }}
+{{ line("Will use common ontologies", processing.get('useOntologies')) }}
+{{ line("Provide results as semantically interoperable linked data", processing.get('semanticInteroperability')) }}
+{%- endset -%}
+{{ q("What data and metadata vocabularies, standards, formats or methodologies will you follow to make your data interoperable to allow data exchange and re-use within and across disciplines? Will you follow community-endorsed interoperability best practices? Which ones?", c) }}
+
+{%- set c %}
+{{ line("Need to create vocabularies/ontologies", datadoc.get('createVocabularies')) }}
+{{ line("Will map terms to existing vocabularies/ontologies", datadoc.get('mapping')) }}
+{%- endset -%}
+{{ q("In case it is unavoidable that you use uncommon or generate project specific ontologies or vocabularies, will you provide mappings to more commonly used ontologies? Will you openly publish the generated ontologies or vocabularies to allow reusing, refining or extending them?", c) }}
+
+{%- set c %}
+{{ line("Integrating/linking data from different origins/types", processing.get('integratingDataSourcesMoreInfo')) }}
+{%- endset -%}
+{{ q("Will your data include qualified references to other data (e.g. other data from your project, or datasets from previous research)?", c) }}
+
+<h3>Increase data re-use</h3>
+
+{%- set c %}
+{{ linemulti("How data and metadata are connected", datadoc.connectRespectiveMetadata) }}
+{%- endset -%}
+{{ q("How will you provide documentation needed to validate data analysis and facilitate data re-use (e.g. readme files with information on methodology, codebooks, data cleaning, analyses, variable definitions, units of measurement, etc.)?", c) }}
+
+{%- set c %}
+{{ line("Licence assigned to data as early as possible", datadoc.assignsLicense) }}
+{{ line("Use restrictions on the data", datadoc.dataUseRestrictions) }}
+{%- for ds in archiving.distributions -%}
+{{ line("Dataset licence", ds.licenseDataset if ds.licenseDataset else none) }}
+{%- endfor -%}
+{%- endset -%}
+{{ q("Will your data be made freely available in the public domain to permit the widest re-use possible? Will your data be licensed using standard reuse licenses, in line with the obligations set out in the Grant Agreement?", c) }}
+
+{%- set c %}
+{%- for ds in archiving.distributions -%}
+{{ line("Retention", ds.retention if ds.retention else none) }}
+{%- endfor -%}
+{%- for a in archiving.identifyArchiveDepositing -%}
+{%- if a.typeOfArchive and a.typeOfArchive._value == "specialPurpose" and a.typeOfArchive.longTermSupport -%}
+{{ line("Long-term support beyond the project", a.typeOfArchive.longTermSupport) }}
+{%- endif -%}
+{%- endfor -%}
+{%- endset -%}
+{{ q("Will the data produced in the project be useable by third parties, in particular after the end of the project?", c) }}
+
+{%- set c %}
+{%- for m in (reusing.hasMeasuredData.dataMeasurementEquipment if (reusing.hasMeasuredData and reusing.hasMeasuredData.dataMeasurementEquipment) else []) -%}
+{{ line("Provenance / data lineage", m.howProvenance if m.howProvenance else none) }}
+{%- endfor -%}
+{{ line("Monitor data integrity after collection", processing.get('monitorIntegrity')) }}
+{%- endset -%}
+{{ q("Will the provenance of the data be thoroughly documented using the appropriate standards?", c) }}
+
+{%- set c %}
+{%- for m in (reusing.hasMeasuredData.dataMeasurementEquipment if (reusing.hasMeasuredData and reusing.hasMeasuredData.dataMeasurementEquipment) else []) -%}
+{{ linemulti("Quality processes applied", m.qualityProcessesApplied if m.qualityProcessesApplied else none) }}
+{%- endfor -%}
+{%- for n in (reusing.hasNonMeasuredData.datasets if (reusing.hasNonMeasuredData and reusing.hasNonMeasuredData.datasets) else []) -%}
+{{ line("Data integrity and quality measures", n.integrityQualityMeasures if n.integrityQualityMeasures else none) }}
+{%- endfor -%}
+{{ line("Computational results validation", processing.get('resultsIntegrityValidation')) }}
+{%- endset -%}
+{{ q("Describe all relevant data quality assurance processes.", c) }}
+
+{#- ============================================================= -#}
+<h2>Other research outputs</h2>
+
+{%- set c %}
+{{ line("Generates research software/code/models/simulations", reusing.generateResearchSoftware) }}
+{{ line("Collects physical samples", reusing.collectsPhysicalSample) }}
+{{ line("Other data the project will gather", reusing.gather) }}
+{%- for sp in archiving.softwarePackages -%}
+{{ line("Software package", sp.nameSoftwareComputational if sp.nameSoftwareComputational else none) }}
+{%- endfor -%}
+{%- endset -%}
+{{ q("In addition to the management of data, beneficiaries should also consider and plan for the management of other research outputs that may be generated or re-used (e.g. software, workflows, protocols, models, new materials, antibodies, reagents, samples, etc.).", c) }}
+
+{#- ============================================================= -#}
+<h2>Allocation of resources</h2>
+
+{%- set c %}
+{%- if respres.recurringFees and respres.recurringFees._value is sameas true -%}
+{{ line("Software licences / recurring costs", respres.recurringFees.indicateCosts3 if respres.recurringFees.indicateCosts3 else none) }}
+{%- endif -%}
+{%- if respres.storageActivePhase and respres.storageActivePhase._value == "yes" -%}
+{{ line("Active-phase data storage", respres.storageActivePhase.indicateCosts2 if respres.storageActivePhase.indicateCosts2 else none) }}
+{%- endif -%}
+{%- if respres.preservationArchivingAssociated and respres.preservationArchivingAssociated._value == "yes" -%}
+{{ line("Preservation and archiving", respres.preservationArchivingAssociated.indicateCosts if respres.preservationArchivingAssociated.indicateCosts else none) }}
+{%- endif -%}
+{%- if respres.hasDataPublicationBudget and respres.hasDataPublicationBudget._value is sameas true -%}
+{{ line("Data publication budget", respres.hasDataPublicationBudget.budget if respres.hasDataPublicationBudget.budget else none) }}
+{%- endif -%}
+{{ line("Total data management cost", respres.totalCostsManagement) }}
+{%- endset -%}
+{{ q("What will the costs be for making data or other research outputs FAIR in your project (e.g. direct and indirect costs related to storage, archiving, re-use, security, etc.)?", c) }}
+
+{%- set c %}
+{{ line("Budgeted for making outputs FAIR", respres.hasDataPublicationBudget) }}
+{%- endset -%}
+{{ q("How will these be covered? Note that costs related to research data/output management are eligible as part of the Horizon Europe grant (if compliant with the Grant Agreement conditions).", c) }}
+
+{%- set c %}
+{{ line("Data management responsibilities clearly assigned", respres.haveManagementResponsibilities) }}
+{%- set ns = namespace(found=false) -%}
+{%- for cn in admin.contributors -%}
+{%- set roleVals = cn.roles|map(attribute='_value')|list if cn.roles else [] -%}
+{%- if "dataManagerData" in roleVals or "dataCurator" in roleVals -%}
+{%- set ns.found = true -%}
+{{ line("Responsible person", (cn.name._value if cn.name else "") ~ (" (" ~ (cn.roles|map(attribute='_label')|join(', ')) ~ ")" if cn.roles else "")) }}
+{%- endif -%}
+{%- endfor -%}
+{%- endset -%}
+{{ q("Who will be responsible for data management in your project?", c) }}
+
+{%- set c %}
+{{ line("Preservation/archiving associated with costs", respres.preservationArchivingAssociated) }}
+{%- for ds in archiving.distributions -%}
+{{ line("Retention", ds.retention if ds.retention else none) }}
+{%- endfor -%}
+{%- for a in archiving.identifyArchiveDepositing -%}
+{{ line("Type of archive", a.typeOfArchive if a.typeOfArchive else none) }}
+{%- endfor -%}
+{%- endset -%}
+{{ q("How will long term preservation be ensured? Discuss the necessary resources to accomplish this (costs and potential value, who decides and how, what data will be kept and for how long)?", c) }}
+
+{#- ============================================================= -#}
+<h2>Data security</h2>
+
+{%- set c %}
+{{ line("Information loss/leak/vandalism risks", storing.dataLossLeakVandalismRisks) }}
+{%- for sg in storing.storageGuidelinesFollowing -%}
+{{ line("Storage guideline", sg.storageGuide if sg.storageGuide else none) }}
+{%- endfor -%}
+{%- for sd in storing.storeDocuments -%}
+{{ line("Storage solution", sd.nameStorageSolution if sd.nameStorageSolution else none) }}
+{{ linemulti("Information security level", sd.informationSecurityLevel if sd.informationSecurityLevel else none) }}
+{%- endfor -%}
+{%- endset -%}
+{{ q("What provisions are or will be in place for data security (including data recovery as well as secure storage/archiving and transfer of sensitive data)?", c) }}
+
+{%- set c %}
+{%- for ds in archiving.distributions -%}
+{{ line("Deposited for long-term preservation", ds.hasBeenArchived if ds.hasBeenArchived else none) }}
+{%- endfor -%}
+{%- for a in archiving.identifyArchiveDepositing -%}
+{{ line("Identified archive", a.repository if a.repository else none) }}
+{%- endfor -%}
+{%- endset -%}
+{{ q("Will the data be safely stored in trusted repositories for long term preservation and curation?", c) }}
+
+{#- ============================================================= -#}
+<h2>Ethics</h2>
+
+{%- set c %}
+{{ line("Project requires ethical pre-approval", legal.requiresEthicalApproval) }}
+{{ line("Personal data collected/processed", legal.personalCollectedProcessed) }}
+{{ line("Sensitive information (beyond GDPR special categories)", legal.sensitiveInformationThan) }}
+{%- if legal.sensitiveInformationThan and legal.sensitiveInformationThan.brieflyDescribeSensitive -%}
+{{ line("Sensitive information", legal.sensitiveInformationThan.brieflyDescribeSensitive) }}
+{%- endif -%}
+{{ linemulti("Applicable general research ethical guidelines", legal.indicateApplicableGeneral) }}
+{{ line("Additional ethical guidelines/codes of conduct", legal.additionalEthicalGuidelines) }}
+{%- endset -%}
+{{ q("Are there, or could there be, any ethics or legal issues that can have an impact on data sharing? These can also be discussed in the context of the ethics review. If relevant, include references to ethics deliverables and ethics chapter in the Description of the Action (DoA).", c) }}
+
+{%- set c %}
+{%- if legal.personalCollectedProcessed and legal.personalCollectedProcessed.documentParticipantsInformation -%}
+{{ line("How participants are informed / consent documented", legal.personalCollectedProcessed.documentParticipantsInformation) }}
+{%- endif -%}
+{%- if legal.personalCollectedProcessed and legal.personalCollectedProcessed.privacyConsiderations -%}
+{%- set pc = legal.personalCollectedProcessed.privacyConsiderations -%}
+{{ line("What kind of consent", pc.whatKind if pc.whatKind else none) }}
+{{ line("Consent form available for re-users", pc.reusersAvailable if pc.reusersAvailable else none) }}
+{%- endif -%}
+{%- endset -%}
+{{ q("Will informed consent for data sharing and long term preservation be included in questionnaires dealing with personal data?", c) }}
+
+{#- ============================================================= -#}
+<h2>Other issues</h2>
+
+{%- set c %}
+{%- for p in admin.institutionalPoliciesGuidelines -%}
+{{ line("Institutional policy/guideline", p.institutionalPolicyGuideline if p.institutionalPolicyGuideline else none) }}
+{%- endfor -%}
+{%- for r in (research.get('researchManagementRequirements') or []) -%}
+{{ line("Funder data management requirement", r) }}
+{%- endfor -%}
+{%- for lp in (legal.get('listPoliciesGuidelines') or []) -%}
+{{ line("Policy/guideline", lp.namePolicyGuideline if lp.namePolicyGuideline else none) }}
+{%- endfor -%}
+{%- endset -%}
+{{ q("Do you, or will you, make use of other national/funder/sectorial/departmental procedures for data management? If yes, which ones (please list and briefly describe them)?", c) }}
+
+</body>
+</html>
